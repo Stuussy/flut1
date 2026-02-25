@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'upgrade_recommendations_page.dart';
@@ -30,6 +31,8 @@ class _GameInfoPageState extends State<GameInfoPage>
   Map<String, dynamic>? compatibilityData;
   bool isLoading = true;
   bool _fromCache = false;
+  bool _hasNetworkError = false;
+  String _networkErrorMsg = '';
 
   final Map<String, Map<String, dynamic>> gameThemes = {
     "Counter-Strike 2": {
@@ -117,7 +120,10 @@ class _GameInfoPageState extends State<GameInfoPage>
   }
 
   Future<void> checkCompatibility({bool forceRefresh = false}) async {
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+      _hasNetworkError = false;
+    });
 
     // Try cache first (skip if user explicitly refreshes)
     if (!forceRefresh) {
@@ -172,8 +178,21 @@ class _GameInfoPageState extends State<GameInfoPage>
         _showSnackBar("Ошибка проверки совместимости", Colors.red);
       }
     } catch (e) {
-      if (mounted) setState(() => isLoading = false);
-      _showSnackBar("Ошибка соединения: $e", Colors.red);
+      if (mounted) {
+        final msg = e.toString().toLowerCase();
+        final isNetwork = msg.contains('socket') ||
+            msg.contains('connection') ||
+            msg.contains('timeout') ||
+            msg.contains('network') ||
+            msg.contains('failed host');
+        setState(() {
+          isLoading = false;
+          _hasNetworkError = true;
+          _networkErrorMsg = isNetwork
+              ? 'Нет подключения к интернету'
+              : 'Не удалось получить данные';
+        });
+      }
     }
   }
 
@@ -184,6 +203,61 @@ class _GameInfoPageState extends State<GameInfoPage>
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  // ─── Поделиться результатом ──────────────────────────────────────────────
+  void _shareResult() {
+    if (compatibilityData == null) return;
+    final compat = compatibilityData!['compatibility'];
+    final statusText = getStatusText(compat['status'] as String);
+    final fps = compat['estimatedFPS'];
+    final message = compat['message'] ?? '';
+
+    final text = '🎮 GamePulse — Проверка совместимости\n'
+        '━━━━━━━━━━━━━━━━━━\n'
+        '🕹 Игра: ${widget.title}\n'
+        '⚡ Результат: $statusText — $fps FPS\n'
+        '📝 $message\n'
+        '━━━━━━━━━━━━━━━━━━\n'
+        'Проверено через GamePulse';
+
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Результат скопирован — вставьте в любой мессенджер',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF6C63FF),
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // ─── Placeholder для загрузки изображения ────────────────────────────────
+  Widget _buildImagePlaceholder() {
+    return Container(
+      color: const Color(0xFF1A1A2E),
+      child: Center(
+        child: Icon(
+          Icons.videogame_asset_outlined,
+          color: Colors.white.withOpacity(0.12),
+          size: 40,
+        ),
       ),
     );
   }
@@ -295,11 +369,31 @@ class _GameInfoPageState extends State<GameInfoPage>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                        icon: const Icon(Icons.arrow_back_ios_new,
+                            color: Colors.white),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
                   ),
+
+                  // Кнопка «Поделиться» — появляется только когда есть результат
+                  if (compatibilityData != null)
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.ios_share_rounded,
+                              color: Colors.white),
+                          tooltip: 'Поделиться результатом',
+                          onPressed: _shareResult,
+                        ),
+                      ),
+                    ),
                   
                   Positioned(
                     bottom: 20,
@@ -338,6 +432,61 @@ class _GameInfoPageState extends State<GameInfoPage>
                         color: Color(0xFF6C63FF),
                       ),
                     )
+                  : _hasNetworkError
+                      ? Center(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 32),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.wifi_off_rounded,
+                                      color: Colors.red, size: 48),
+                                ),
+                                const SizedBox(height: 20),
+                                const Text(
+                                  'Нет подключения',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _networkErrorMsg,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: Colors.white.withOpacity(0.5),
+                                      fontSize: 14),
+                                ),
+                                const SizedBox(height: 28),
+                                ElevatedButton.icon(
+                                  onPressed: () =>
+                                      checkCompatibility(forceRefresh: true),
+                                  icon: const Icon(Icons.refresh_rounded,
+                                      size: 18),
+                                  label: const Text('Повторить'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF6C63FF),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(14)),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 28, vertical: 12),
+                                    elevation: 0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
                   : compatibilityData == null
                       ? Center(
                           child: Column(
