@@ -35,7 +35,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
 
   String selectedBudget = "medium"; // "low", "medium", "high"
 
-  final double usdToKztRate = 480.0;
+  double _usdToKztRate = 480.0;
 
   @override
   void initState() {
@@ -49,8 +49,28 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
       curve: Curves.easeIn,
     );
     _animController.forward();
-    
+
+    _fetchKztRate();
     loadRecommendations();
+  }
+
+  Future<void> _fetchKztRate() async {
+    try {
+      final resp = await http
+          .get(Uri.parse('https://open.er-api.com/v6/latest/USD'))
+          .timeout(const Duration(seconds: 5));
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body);
+        if (data['result'] == 'success') {
+          final rate = (data['rates']['KZT'] as num?)?.toDouble();
+          if (rate != null && mounted) {
+            setState(() => _usdToKztRate = rate);
+          }
+        }
+      }
+    } catch (_) {
+      // Fall back to hardcoded rate — no action needed
+    }
   }
 
   @override
@@ -165,7 +185,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
   }
 
   String _convertToKzt(num usdPrice) {
-    final kztPrice = (usdPrice * usdToKztRate).toInt();
+    final kztPrice = (usdPrice * _usdToKztRate).toInt();
     return _formatKzt(kztPrice);
   }
   

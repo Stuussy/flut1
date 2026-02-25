@@ -2,21 +2,24 @@ import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
 import 'pages/main_page.dart';
 import 'utils/session_manager.dart';
+import 'utils/theme_manager.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ThemeManager.loadSavedTheme();
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'GamePulse',
-      theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFF001F3F),
+  static ThemeData get _darkTheme => ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF0D0D1E),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF6C63FF),
+          surface: Color(0xFF1A1A2E),
+        ),
         inputDecorationTheme: const InputDecorationTheme(
           filled: true,
           fillColor: Colors.white24,
@@ -25,16 +28,47 @@ class MyApp extends StatelessWidget {
           ),
           hintStyle: TextStyle(color: Colors.white70),
         ),
-      ),
-      home: const SplashScreen(),
-      onGenerateRoute: (settings) {
-        if (settings.name == '/main') {
-          final email = settings.arguments as String;
-          return MaterialPageRoute(
-            builder: (_) => MainPage(userEmail: email),
-          );
-        }
-        return MaterialPageRoute(builder: (_) => const LoginPage());
+      );
+
+  static ThemeData get _lightTheme => ThemeData(
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF0F2F8),
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF6C63FF),
+          surface: Color(0xFFFFFFFF),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+          hintStyle: const TextStyle(color: Colors.black45),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeManager.notifier,
+      builder: (_, mode, __) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'GamePulse',
+          themeMode: mode,
+          theme: _lightTheme,
+          darkTheme: _darkTheme,
+          home: const SplashScreen(),
+          onGenerateRoute: (settings) {
+            if (settings.name == '/main') {
+              final email = settings.arguments as String;
+              return MaterialPageRoute(
+                builder: (_) => MainPage(userEmail: email),
+              );
+            }
+            return MaterialPageRoute(builder: (_) => const LoginPage());
+          },
+        );
       },
     );
   }

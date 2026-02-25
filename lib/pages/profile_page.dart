@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'add_pc_page.dart';
 import '../utils/session_manager.dart';
 import '../utils/api_config.dart';
+import '../utils/theme_manager.dart';
 import 'login_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -489,6 +490,64 @@ class _ProfilePageState extends State<ProfilePage>
 
                         Column(
                           children: [
+                            // Theme toggle
+                            ValueListenableBuilder<ThemeMode>(
+                              valueListenable: ThemeManager.notifier,
+                              builder: (_, mode, __) {
+                                final isDark = mode == ThemeMode.dark;
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF1A1A2E),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.1),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isDark
+                                            ? Icons.dark_mode_rounded
+                                            : Icons.light_mode_rounded,
+                                        color: isDark
+                                            ? const Color(0xFF6C63FF)
+                                            : const Color(0xFFFFB300),
+                                        size: 22,
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Text(
+                                          isDark
+                                              ? 'Тёмная тема'
+                                              : 'Светлая тема',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      Switch(
+                                        value: isDark,
+                                        onChanged: (val) =>
+                                            ThemeManager.setDarkMode(val),
+                                        activeColor: const Color(0xFF6C63FF),
+                                        inactiveThumbColor:
+                                            const Color(0xFFFFB300),
+                                        inactiveTrackColor:
+                                            const Color(0xFFFFB300)
+                                                .withOpacity(0.35),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+
+                            const SizedBox(height: 12),
+
                             // Edit username
                             SizedBox(
                               width: double.infinity,

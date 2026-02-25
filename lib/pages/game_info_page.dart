@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'upgrade_recommendations_page.dart';
 import '../utils/session_manager.dart';
 import '../utils/api_config.dart';
+import '../utils/cache_manager.dart';
 
 class GameInfoPage extends StatefulWidget {
   final String title;
@@ -28,6 +29,7 @@ class _GameInfoPageState extends State<GameInfoPage>
   
   Map<String, dynamic>? compatibilityData;
   bool isLoading = true;
+  bool _fromCache = false;
 
   final Map<String, Map<String, dynamic>> gameThemes = {
     "Counter-Strike 2": {
@@ -114,7 +116,25 @@ class _GameInfoPageState extends State<GameInfoPage>
     super.dispose();
   }
 
-  Future<void> checkCompatibility() async {
+  Future<void> checkCompatibility({bool forceRefresh = false}) async {
+    setState(() => isLoading = true);
+
+    // Try cache first (skip if user explicitly refreshes)
+    if (!forceRefresh) {
+      final cached = await CacheManager.getCompatibility(
+          widget.userEmail, widget.title);
+      if (cached != null) {
+        if (mounted) {
+          setState(() {
+            compatibilityData = cached;
+            isLoading = false;
+            _fromCache = true;
+          });
+        }
+        return;
+      }
+    }
+
     try {
       final token = await SessionManager.getAuthToken() ?? '';
       final url = Uri.parse('${ApiConfig.baseUrl}/check-game-compatibility');
@@ -133,26 +153,26 @@ class _GameInfoPageState extends State<GameInfoPage>
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
-          setState(() {
-            compatibilityData = data;
-            isLoading = false;
-          });
+          // Save to cache
+          await CacheManager.saveCompatibility(
+              widget.userEmail, widget.title, data);
+          if (mounted) {
+            setState(() {
+              compatibilityData = data;
+              isLoading = false;
+              _fromCache = false;
+            });
+          }
         } else {
-          setState(() {
-            isLoading = false;
-          });
+          if (mounted) setState(() => isLoading = false);
           _showSnackBar(data['message'] ?? "Ошибка проверки", Colors.red);
         }
       } else {
-        setState(() {
-          isLoading = false;
-        });
+        if (mounted) setState(() => isLoading = false);
         _showSnackBar("Ошибка проверки совместимости", Colors.red);
       }
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) setState(() => isLoading = false);
       _showSnackBar("Ошибка соединения: $e", Colors.red);
     }
   }
@@ -342,7 +362,7 @@ class _GameInfoPageState extends State<GameInfoPage>
                       : RefreshIndicator(
                           color: const Color(0xFF6C63FF),
                           backgroundColor: const Color(0xFF1A1A2E),
-                          onRefresh: checkCompatibility,
+                          onRefresh: () => checkCompatibility(forceRefresh: true),
                           child: SingleChildScrollView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.all(16),
@@ -385,7 +405,26 @@ class _GameInfoPageState extends State<GameInfoPage>
     final statusColor = getStatusColor(status);
     final fps = compatibility['estimatedFPS'];
 
-    return Container(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_fromCache)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(Icons.cached,
+                    color: Colors.white.withOpacity(0.45), size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  'Кэшировано · потяните вниз для обновления',
+                  style: TextStyle(
+                      color: Colors.white.withOpacity(0.45), fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+        Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -472,6 +511,8 @@ class _GameInfoPageState extends State<GameInfoPage>
           ),
         ],
       ),
+        ),
+      ],
     );
   }
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 import '../utils/api_config.dart';
+import '../utils/favorites_manager.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -25,6 +26,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   List<Map<String, dynamic>> games = [];
   List<Map<String, dynamic>> _filteredGames = [];
+  List<String> _favoriteNames = [];
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
 
@@ -126,6 +128,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _carouselController = PageController(viewportFraction: 0.8);
 
     _loadGames();
+    _loadFavorites();
   }
 
   Future<void> _loadGames() async {
@@ -158,6 +161,53 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
     } catch (e) {
       debugPrint("Ошибка загрузки игр: $e");
+    }
+  }
+
+  Future<void> _loadFavorites() async {
+    final favs = await FavoritesManager.getFavorites();
+    if (mounted) {
+      setState(() {
+        _favoriteNames = favs;
+      });
+    }
+  }
+
+  Future<void> _toggleFavorite(String gameTitle) async {
+    try {
+      final added = await FavoritesManager.toggleFavorite(gameTitle);
+      await _loadFavorites();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              added
+                  ? '$gameTitle добавлена в избранное'
+                  : '$gameTitle удалена из избранного',
+            ),
+            backgroundColor:
+                added ? const Color(0xFF6C63FF) : Colors.grey.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
     }
   }
 
@@ -225,26 +275,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
                             const SizedBox(height: 32),
 
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: Row(
-                                children: const [
-                                  Icon(
-                                    Icons.videogame_asset,
-                                    color: Color(0xFF6C63FF),
-                                    size: 20,
-                                  ),
-                                  SizedBox(width: 10),
-                                  Text(
-                                    "Все игры",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
+                            // Favourites section
+                            if (_favoriteNames.isNotEmpty) ...[
+                              _buildSectionHeader(
+                                Icons.star_rounded,
+                                "Избранное",
+                                color: const Color(0xFFFFB300),
                               ),
+                              const SizedBox(height: 12),
+                              _buildFavoritesRow(),
+                              const SizedBox(height: 28),
+                            ],
+
+                            _buildSectionHeader(
+                              Icons.videogame_asset,
+                              "Все игры",
                             ),
 
                             const SizedBox(height: 12),
@@ -313,6 +358,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(IconData icon, String title,
+      {Color color = const Color(0xFF6C63FF)}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 10),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -401,6 +467,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         itemCount: games.length,
         itemBuilder: (context, index) {
           final game = games[index];
+          final isFav = _favoriteNames.contains(game['title'] as String);
 
           return AnimatedBuilder(
             animation: _carouselController,
@@ -479,6 +546,29 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         ),
                       ),
 
+                      // Star button in top-right
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () => _toggleFavorite(game['title'] as String),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.45),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              isFav ? Icons.star_rounded : Icons.star_border_rounded,
+                              color: isFav
+                                  ? const Color(0xFFFFB300)
+                                  : Colors.white.withOpacity(0.8),
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+
                       Positioned(
                         bottom: 12,
                         left: 12,
@@ -520,6 +610,119 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  /// Horizontal scrollable row of favourite game cards.
+  Widget _buildFavoritesRow() {
+    final favGames = games
+        .where((g) => _favoriteNames.contains(g['title'] as String))
+        .toList();
+
+    return SizedBox(
+      height: 110,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: favGames.length,
+        itemBuilder: (context, index) {
+          final game = favGames[index];
+          return GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => GameInfoPage(
+                  title: game["title"]!,
+                  image: game["image"]!,
+                  userEmail: widget.userEmail,
+                ),
+              ),
+            ),
+            child: Container(
+              width: 140,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: (game["colors"] as List<Color>)[0].withOpacity(0.25),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: game["colors"],
+                        ),
+                      ),
+                    ),
+                    if ((game["image"] as String).isNotEmpty)
+                      Image.network(
+                        game["image"],
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      ),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.85),
+                          ],
+                          stops: const [0.4, 1.0],
+                        ),
+                      ),
+                    ),
+                    // Star badge
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Icon(
+                          Icons.star_rounded,
+                          color: Color(0xFFFFB300),
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      right: 8,
+                      child: Text(
+                        game["title"]!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildGameGrid() {
     if (_filteredGames.isEmpty && _searchQuery.isNotEmpty) {
       return Padding(
@@ -552,6 +755,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         itemCount: _filteredGames.length,
         itemBuilder: (context, index) {
           final game = _filteredGames[index];
+          final isFav = _favoriteNames.contains(game['title'] as String);
 
           return GestureDetector(
             onTap: () {
@@ -610,6 +814,29 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             Colors.black.withOpacity(0.9),
                           ],
                           stops: const [0.4, 1.0],
+                        ),
+                      ),
+                    ),
+
+                    // Star / favourite toggle
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () => _toggleFavorite(game['title'] as String),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.45),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            isFav ? Icons.star_rounded : Icons.star_border_rounded,
+                            color: isFav
+                                ? const Color(0xFFFFB300)
+                                : Colors.white.withOpacity(0.8),
+                            size: 16,
+                          ),
                         ),
                       ),
                     ),
