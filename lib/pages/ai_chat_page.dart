@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../utils/session_manager.dart';
+import '../utils/api_config.dart';
 
 class AiChatPage extends StatefulWidget {
   final String userEmail;
@@ -23,7 +24,7 @@ class AiChatPage extends StatefulWidget {
 class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateMixin {
   // Flutter Web (Chrome) үшін localhost дұрыс.
   // Егер телефон/эмулятор болса, мұны өзгерту керек (android emulator: 10.0.2.2).
-  static const String _baseUrl = 'http://localhost:3001';
+  static String get _baseUrl => ApiConfig.baseUrl;
 
   late final AnimationController _animController;
   late final Animation<double> _fadeAnimation;

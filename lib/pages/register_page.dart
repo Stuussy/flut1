@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'main_page.dart';
@@ -141,7 +142,7 @@ class _RegisterPageState extends State<RegisterPage>
     setState(() => _isLoading = true);
 
     try {
-      final url = Uri.parse("http://localhost:3001/register");
+      final url = Uri.parse("${ApiConfig.baseUrl}/register");
       final res = await http.post(
         url,
         headers: {"Content-Type": "application/json"},

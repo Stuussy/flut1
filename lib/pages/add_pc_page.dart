@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../utils/session_manager.dart';
+import '../utils/api_config.dart';
 
 class AddPcPageWithCallback extends StatefulWidget {
   final String userEmail;
@@ -60,7 +61,7 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
   Future<void> _loadUserPC() async {
     try {
       final token = await SessionManager.getAuthToken() ?? '';
-      final url = Uri.parse('http://localhost:3001/user/${widget.userEmail}');
+      final url = Uri.parse('${ApiConfig.baseUrl}/user/${widget.userEmail}');
       final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
 
       if (response.statusCode == 200) {
@@ -101,7 +102,7 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
     });
 
     final token = await SessionManager.getAuthToken() ?? '';
-    final url = Uri.parse('http://localhost:3001/add-pc');
+    final url = Uri.parse('${ApiConfig.baseUrl}/add-pc');
     final body = jsonEncode({
       'email': widget.userEmail,
       'cpu': selectedCPU,
@@ -453,7 +454,7 @@ class _AddPcPageState extends State<AddPcPage>
   Future<void> _loadUserPC() async {
     try {
       final token = await SessionManager.getAuthToken() ?? '';
-      final url = Uri.parse('http://localhost:3001/user/${widget.userEmail}');
+      final url = Uri.parse('${ApiConfig.baseUrl}/user/${widget.userEmail}');
       final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
 
       if (response.statusCode == 200) {
@@ -494,7 +495,7 @@ class _AddPcPageState extends State<AddPcPage>
     });
 
     final token = await SessionManager.getAuthToken() ?? '';
-    final url = Uri.parse('http://localhost:3001/add-pc');
+    final url = Uri.parse('${ApiConfig.baseUrl}/add-pc');
     final body = jsonEncode({
       'email': widget.userEmail,
       'cpu': selectedCPU,

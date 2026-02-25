@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../utils/api_config.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -23,6 +24,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Timer? _carouselTimer;
 
   List<Map<String, dynamic>> games = [];
+  List<Map<String, dynamic>> _filteredGames = [];
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _searchQuery = '';
 
   // Local UI metadata for known games; new games get defaults
   static const Map<String, Map<String, dynamic>> _gamesMeta = {
@@ -127,7 +131,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _loadGames() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3001/games'),
+        Uri.parse('${ApiConfig.baseUrl}/games'),
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -146,6 +150,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           if (mounted) {
             setState(() {
               games = loaded;
+              _filteredGames = loaded;
             });
             _startCarouselAutoScroll();
           }
@@ -170,11 +175,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
+  void _onSearchChanged(String query) {
+    setState(() {
+      _searchQuery = query.trim().toLowerCase();
+      _filteredGames = _searchQuery.isEmpty
+          ? games
+          : games
+              .where((g) =>
+                  (g['title'] as String).toLowerCase().contains(_searchQuery) ||
+                  (g['subtitle'] as String).toLowerCase().contains(_searchQuery))
+              .toList();
+    });
+  }
+
   @override
   void dispose() {
     _carouselTimer?.cancel();
     _carouselController.dispose();
     _fadeController.dispose();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
@@ -225,6 +244,60 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                     ),
                                   ),
                                 ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Search field
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1A1A2E),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.1),
+                                  ),
+                                ),
+                                child: TextField(
+                                  controller: _searchCtrl,
+                                  onChanged: _onSearchChanged,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                  decoration: InputDecoration(
+                                    prefixIcon: const Icon(
+                                      Icons.search,
+                                      color: Color(0xFF6C63FF),
+                                      size: 20,
+                                    ),
+                                    suffixIcon: _searchQuery.isNotEmpty
+                                        ? IconButton(
+                                            icon: Icon(
+                                              Icons.close,
+                                              color: Colors.white.withOpacity(0.5),
+                                              size: 18,
+                                            ),
+                                            onPressed: () {
+                                              _searchCtrl.clear();
+                                              _onSearchChanged('');
+                                            },
+                                          )
+                                        : null,
+                                    hintText: "Поиск игры...",
+                                    hintStyle: TextStyle(
+                                      color: Colors.white.withOpacity(0.4),
+                                      fontSize: 14,
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
 
@@ -448,6 +521,23 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildGameGrid() {
+    if (_filteredGames.isEmpty && _searchQuery.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.search_off, color: Colors.white.withOpacity(0.3), size: 48),
+              const SizedBox(height: 12),
+              Text(
+                'Игра не найдена',
+                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 15),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GridView.builder(
@@ -459,9 +549,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),
-        itemCount: games.length,
+        itemCount: _filteredGames.length,
         itemBuilder: (context, index) {
-          final game = games[index];
+          final game = _filteredGames[index];
 
           return GestureDetector(
             onTap: () {

@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'upgrade_recommendations_page.dart';
 import '../utils/session_manager.dart';
+import '../utils/api_config.dart';
 
 class GameInfoPage extends StatefulWidget {
   final String title;
@@ -116,7 +117,7 @@ class _GameInfoPageState extends State<GameInfoPage>
   Future<void> checkCompatibility() async {
     try {
       final token = await SessionManager.getAuthToken() ?? '';
-      final url = Uri.parse('http://localhost:3001/check-game-compatibility');
+      final url = Uri.parse('${ApiConfig.baseUrl}/check-game-compatibility');
       final response = await http.post(
         url,
         headers: {

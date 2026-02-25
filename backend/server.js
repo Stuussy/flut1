@@ -733,6 +733,51 @@ app.get("/user/:email", authenticateToken, async (req, res) => {
   }
 });
 
+// Update profile (username)
+app.post("/update-profile", authenticateToken, async (req, res) => {
+  const { email, username } = req.body;
+  if (!email || !username || username.trim().length === 0) {
+    return res.status(400).json({ success: false, message: "Имя пользователя не может быть пустым" });
+  }
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: "Пользователь не найден" });
+    user.username = username.trim();
+    await user.save();
+    res.json({ success: true, message: "Имя успешно обновлено", user });
+  } catch (err) {
+    console.error("Ошибка update-profile:", err);
+    res.status(500).json({ success: false, message: "Ошибка сервера" });
+  }
+});
+
+// Change password (requires old password verification)
+app.post("/change-password", authenticateToken, async (req, res) => {
+  const { email, oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: "Заполните все поля" });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ success: false, message: "Новый пароль должен содержать минимум 8 символов" });
+  }
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: "Пользователь не найден" });
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: "Неверный текущий пароль" });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+    res.json({ success: true, message: "Пароль успешно изменён" });
+  } catch (err) {
+    console.error("Ошибка change-password:", err);
+    res.status(500).json({ success: false, message: "Ошибка сервера" });
+  }
+});
+
 app.post("/check-game-compatibility", authenticateToken, async (req, res) => {
   const { email, gameTitle } = req.body;
 

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../utils/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -13,7 +14,7 @@ class AdminAiChatPage extends StatefulWidget {
 
 class _AdminAiChatPageState extends State<AdminAiChatPage>
     with SingleTickerProviderStateMixin {
-  static const String _baseUrl = 'http://localhost:3001';
+  static String get _baseUrl => ApiConfig.baseUrl;
 
   late final AnimationController _animController;
   late final Animation<double> _fadeAnimation;

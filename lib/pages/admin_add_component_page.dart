@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../utils/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -11,7 +12,7 @@ class AdminAddComponentPage extends StatefulWidget {
 }
 
 class _AdminAddComponentPageState extends State<AdminAddComponentPage> {
-  static const String _baseUrl = 'http://localhost:3001';
+  static String get _baseUrl => ApiConfig.baseUrl;
 
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();

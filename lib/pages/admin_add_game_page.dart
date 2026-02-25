@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../utils/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -10,7 +11,7 @@ class AdminAddGamePage extends StatefulWidget {
 }
 
 class _AdminAddGamePageState extends State<AdminAddGamePage> {
-  static const String _baseUrl = 'http://localhost:3001';
+  static String get _baseUrl => ApiConfig.baseUrl;
 
   final _titleController = TextEditingController();
   bool _isLoading = false;
