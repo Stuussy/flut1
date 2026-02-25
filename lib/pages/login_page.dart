@@ -82,7 +82,8 @@ class _LoginPageState extends State<LoginPage>
         final data = jsonDecode(response.body);
 
         if (data['success'] == true) {
-          await SessionManager.saveUserSession(email);
+          final token = data['token'] as String? ?? '';
+          await SessionManager.saveUserSession(email, token);
 
           _showSnackBar("Успешный вход!", const Color(0xFF4CAF50));
           await Future.delayed(const Duration(milliseconds: 500));
@@ -110,12 +111,14 @@ class _LoginPageState extends State<LoginPage>
 
   Future<void> _showForgotPasswordDialog() async {
     final TextEditingController resetEmailCtrl = TextEditingController();
-    
+    final TextEditingController newPassCtrl = TextEditingController();
+    final TextEditingController confirmPassCtrl = TextEditingController();
+
     return showDialog(
       context: context,
       builder: (BuildContext context) {
         bool isResetting = false;
-        
+
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -123,12 +126,12 @@ class _LoginPageState extends State<LoginPage>
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              title: Row(
+              title: const Row(
                 children: [
-                  const Icon(Icons.lock_reset, color: Color(0xFF6C63FF), size: 28),
-                  const SizedBox(width: 12),
-                  const Text(
-                    "Восстановление пароля",
+                  Icon(Icons.lock_reset, color: Color(0xFF6C63FF), size: 28),
+                  SizedBox(width: 12),
+                  Text(
+                    "Сброс пароля",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -142,44 +145,22 @@ class _LoginPageState extends State<LoginPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Введите email для восстановления пароля",
+                    "Введите email и придумайте новый пароль",
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.7),
                       fontSize: 14,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D0D1E),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
-                      ),
-                    ),
-                    child: TextField(
-                      controller: resetEmailCtrl,
-                      keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(color: Colors.white, fontSize: 15),
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(
-                          Icons.email_outlined,
-                          color: Color(0xFF6C63FF),
-                          size: 20,
-                        ),
-                        hintText: "Email",
-                        hintStyle: TextStyle(
-                          color: Colors.white.withOpacity(0.4),
-                          fontSize: 15,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 16),
+                  _buildDialogField(resetEmailCtrl, "Email", Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress),
+                  const SizedBox(height: 12),
+                  _buildDialogField(newPassCtrl, "Новый пароль", Icons.lock_outline,
+                      obscure: true),
+                  const SizedBox(height: 12),
+                  _buildDialogField(confirmPassCtrl, "Подтвердите пароль",
+                      Icons.lock_outline,
+                      obscure: true),
                 ],
               ),
               actions: [
@@ -194,57 +175,62 @@ class _LoginPageState extends State<LoginPage>
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: isResetting ? null : () async {
-                    final email = resetEmailCtrl.text.trim();
-                    
-                    if (email.isEmpty) {
-                      _showSnackBar("Введите email", Colors.orange);
-                      return;
-                    }
-                    
-                    if (!_isValidEmail(email)) {
-                      _showSnackBar("Введите корректный email", Colors.orange);
-                      return;
-                    }
-                    
-                    setState(() {
-                      isResetting = true;
-                    });
-                    
-                    try {
-                      final url = Uri.parse('http://localhost:3001/forgot-password');
-                      final response = await http.post(
-                        url,
-                        headers: {'Content-Type': 'application/json'},
-                        body: jsonEncode({'email': email}),
-                      );
-                      
-                      if (response.statusCode == 200) {
-                        final data = jsonDecode(response.body);
-                        if (data['success'] == true) {
-                          if (mounted) {
-                            Navigator.pop(context);
-                            _showSnackBar(
-                              "Новый пароль: ${data['newPassword']}\nСохраните его!",
-                              const Color(0xFF4CAF50),
-                            );
+                  onPressed: isResetting
+                      ? null
+                      : () async {
+                          final email = resetEmailCtrl.text.trim();
+                          final newPass = newPassCtrl.text;
+                          final confirmPass = confirmPassCtrl.text;
+
+                          if (email.isEmpty || !_isValidEmail(email)) {
+                            _showSnackBar("Введите корректный email", Colors.orange);
+                            return;
                           }
-                        } else {
-                          _showSnackBar(data['message'] ?? "Ошибка", Colors.red);
-                        }
-                      } else {
-                        _showSnackBar("Ошибка сервера", Colors.red);
-                      }
-                    } catch (e) {
-                      _showSnackBar("Ошибка подключения", Colors.red);
-                    } finally {
-                      if (mounted) {
-                        setState(() {
-                          isResetting = false;
-                        });
-                      }
-                    }
-                  },
+                          if (newPass.length < 8) {
+                            _showSnackBar(
+                                "Пароль должен быть не менее 8 символов", Colors.orange);
+                            return;
+                          }
+                          if (newPass != confirmPass) {
+                            _showSnackBar("Пароли не совпадают", Colors.red);
+                            return;
+                          }
+
+                          setState(() => isResetting = true);
+
+                          try {
+                            final url =
+                                Uri.parse('http://localhost:3001/forgot-password');
+                            final response = await http.post(
+                              url,
+                              headers: {'Content-Type': 'application/json'},
+                              body: jsonEncode(
+                                  {'email': email, 'newPassword': newPass}),
+                            );
+
+                            if (response.statusCode == 200) {
+                              final data = jsonDecode(response.body);
+                              if (data['success'] == true) {
+                                if (mounted) {
+                                  Navigator.pop(context);
+                                  _showSnackBar(
+                                    "Пароль успешно изменён. Войдите с новым паролем.",
+                                    const Color(0xFF4CAF50),
+                                  );
+                                }
+                              } else {
+                                _showSnackBar(
+                                    data['message'] ?? "Ошибка", Colors.red);
+                              }
+                            } else {
+                              _showSnackBar("Ошибка сервера", Colors.red);
+                            }
+                          } catch (e) {
+                            _showSnackBar("Ошибка подключения", Colors.red);
+                          } finally {
+                            if (mounted) setState(() => isResetting = false);
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6C63FF),
                     foregroundColor: Colors.white,
@@ -252,9 +238,7 @@ class _LoginPageState extends State<LoginPage>
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
+                        horizontal: 24, vertical: 12),
                   ),
                   child: isResetting
                       ? const SizedBox(
@@ -266,7 +250,7 @@ class _LoginPageState extends State<LoginPage>
                           ),
                         )
                       : const Text(
-                          "Восстановить",
+                          "Сменить пароль",
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -278,6 +262,36 @@ class _LoginPageState extends State<LoginPage>
           },
         );
       },
+    );
+  }
+
+  Widget _buildDialogField(
+    TextEditingController ctrl,
+    String hint,
+    IconData icon, {
+    bool obscure = false,
+    TextInputType? keyboardType,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D0D1E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: TextField(
+        controller: ctrl,
+        obscureText: obscure,
+        keyboardType: keyboardType,
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: const Color(0xFF6C63FF), size: 20),
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14),
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
+      ),
     );
   }
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../utils/session_manager.dart';
 
 class AiChatPage extends StatefulWidget {
   final String userEmail;
@@ -121,10 +122,14 @@ class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateM
       debugPrint("POST $url");
       debugPrint("payload: ${jsonEncode(payload)}");
 
+      final token = await SessionManager.getAuthToken() ?? '';
       final response = await http
           .post(
             url,
-            headers: const {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
             body: jsonEncode(payload),
           )
           .timeout(const Duration(seconds: 30));

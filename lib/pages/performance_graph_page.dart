@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math' as math;
+import '../utils/session_manager.dart';
 
 class PerformanceGraphPage extends StatefulWidget {
   final String userEmail;
@@ -48,10 +49,14 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
 
   Future<void> loadPerformanceData() async {
     try {
+      final token = await SessionManager.getAuthToken() ?? '';
       final url = Uri.parse('http://localhost:3001/performance-graph');
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({
           'email': widget.userEmail,
         }),
