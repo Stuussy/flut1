@@ -267,6 +267,14 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
                                         _buildPCSpec(Icons.videogame_asset, "GPU", userPC!['gpu'] ?? 'N/A'),
                                         const SizedBox(height: 8),
                                         _buildPCSpec(Icons.storage, "RAM", userPC!['ram'] ?? 'N/A'),
+                                        if ((userPC!['storage'] ?? '').toString().isNotEmpty) ...[
+                                          const SizedBox(height: 8),
+                                          _buildPCSpec(Icons.sd_storage, "Хранилище", userPC!['storage']),
+                                        ],
+                                        if ((userPC!['os'] ?? '').toString().isNotEmpty) ...[
+                                          const SizedBox(height: 8),
+                                          _buildPCSpec(Icons.computer, "ОС", userPC!['os']),
+                                        ],
                                       ],
                                     ),
                                   ),

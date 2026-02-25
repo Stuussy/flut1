@@ -824,6 +824,14 @@ class _GameInfoPageState extends State<GameInfoPage>
           _buildSpecRow(Icons.videogame_asset, "GPU", userPC['gpu'] ?? 'N/A'),
           const SizedBox(height: 12),
           _buildSpecRow(Icons.storage, "RAM", userPC['ram'] ?? 'N/A'),
+          if ((userPC['storage'] ?? '').toString().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildSpecRow(Icons.sd_storage, "Хранилище", userPC['storage']),
+          ],
+          if ((userPC['os'] ?? '').toString().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildSpecRow(Icons.computer, "ОС", userPC['os']),
+          ],
         ],
       ),
     );

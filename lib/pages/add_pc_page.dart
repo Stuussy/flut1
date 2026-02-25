@@ -4,16 +4,130 @@ import 'dart:convert';
 import '../utils/session_manager.dart';
 import '../utils/api_config.dart';
 
+// ─── Единый список железа (единственное место для изменений) ────────────────
+
+const List<String> _kCpus = [
+  // Intel Core i3
+  'Intel Core i3-10100',
+  'Intel Core i3-12100',
+  // Intel Core i5
+  'Intel Core i5-10400',
+  'Intel Core i5-12400',
+  'Intel Core i5-13400',
+  'Intel Core i5-13600K',
+  // Intel Core i7
+  'Intel Core i7-10700K',
+  'Intel Core i7-12700K',
+  'Intel Core i7-13700K',
+  'Intel Core i7-13620H',
+  // Intel Core i9
+  'Intel Core i9-12900K',
+  'Intel Core i9-13900K',
+  'Intel Core i9-14900K',
+  // AMD Ryzen 3
+  'AMD Ryzen 3 3200G',
+  // AMD Ryzen 5
+  'AMD Ryzen 5 3600',
+  'AMD Ryzen 5 5600',
+  'AMD Ryzen 5 5600X',
+  'AMD Ryzen 5 7600X',
+  // AMD Ryzen 7
+  'AMD Ryzen 7 3700X',
+  'AMD Ryzen 7 5700X',
+  'AMD Ryzen 7 5700X3D',
+  'AMD Ryzen 7 7700X',
+  // AMD Ryzen 9
+  'AMD Ryzen 9 5900X',
+  'AMD Ryzen 9 5950X',
+  'AMD Ryzen 9 7900X',
+  'AMD Ryzen 9 9950X3D',
+];
+
+const List<String> _kGpus = [
+  // NVIDIA GTX
+  'NVIDIA GTX 1060 6GB',
+  'NVIDIA GTX 1070',
+  'NVIDIA GTX 1080',
+  'NVIDIA GTX 1650',
+  'NVIDIA GTX 1650 Super',
+  'NVIDIA GTX 1660',
+  'NVIDIA GTX 1660 Super',
+  // NVIDIA RTX 20xx
+  'NVIDIA RTX 2060',
+  'NVIDIA RTX 2060 Super',
+  'NVIDIA RTX 2070 Super',
+  'NVIDIA RTX 2080 Ti',
+  // NVIDIA RTX 30xx
+  'NVIDIA RTX 3060',
+  'NVIDIA RTX 3060 Ti',
+  'NVIDIA RTX 3070',
+  'NVIDIA RTX 3070 Ti',
+  'NVIDIA RTX 3080',
+  'NVIDIA RTX 3090',
+  // NVIDIA RTX 40xx
+  'NVIDIA RTX 4060',
+  'NVIDIA RTX 4060 Ti',
+  'NVIDIA RTX 4070',
+  'NVIDIA RTX 4070 Ti Super',
+  'NVIDIA RTX 4080',
+  'NVIDIA RTX 4090',
+  // AMD RX
+  'AMD RX 570',
+  'AMD RX 580',
+  'AMD RX 5600 XT',
+  'AMD RX 5700 XT',
+  'AMD RX 6600',
+  'AMD RX 6600 XT',
+  'AMD RX 6700 XT',
+  'AMD RX 6800 XT',
+  'AMD RX 7600',
+  'AMD RX 7800 XT',
+  'AMD RX 7900 XTX',
+  // Intel Arc
+  'Intel Arc A770',
+];
+
+const List<String> _kRams = ['4 GB', '8 GB', '16 GB', '32 GB', '64 GB'];
+
+const List<String> _kStorages = [
+  '128 GB SSD',
+  '256 GB SSD',
+  '512 GB SSD',
+  '1 TB SSD',
+  '2 TB SSD',
+  '500 GB HDD',
+  '1 TB HDD',
+  '2 TB HDD',
+];
+
+const List<String> _kOsList = [
+  'Windows 10',
+  'Windows 11',
+  'Linux',
+  'MacOS',
+];
+
+// ─── Основной виджет ────────────────────────────────────────────────────────
+
+/// Универсальный виджет выбора характеристик ПК.
+///
+/// Режим вкладки (по умолчанию):  [showBackButton] = false,
+///   после сохранения вызывает [onPCUpdated].
+///
+/// Режим отдельной страницы:       [showBackButton] = true,
+///   после сохранения делает Navigator.pop(true).
 class AddPcPageWithCallback extends StatefulWidget {
   final String userEmail;
   final VoidCallback? onPCUpdated;
-  
+  final bool showBackButton;
+
   const AddPcPageWithCallback({
     super.key,
     required this.userEmail,
     this.onPCUpdated,
+    this.showBackButton = false,
   });
-  
+
   @override
   State<AddPcPageWithCallback> createState() => _AddPcPageWithCallbackState();
 }
@@ -24,33 +138,9 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
   String? selectedRAM;
   String? selectedStorage;
   String? selectedOS;
-  
+
   bool _isLoading = false;
   bool _isSaving = false;
-  
-  final List<String> cpus = [
-    'Intel i3-12100',
-    'Intel i5-12400',
-    'Intel i7-13620h',
-    'Intel i9-14900k',
-    'AMD Ryzen 3 3200g',
-    'AMD Ryzen 5 5600x',
-    'AMD Ryzen 7 5700x3d',
-    'AMD Ryzen 9 9950x3d'
-  ];
-
-  final List<String> gpus = [
-    'NVIDIA GTX 1650',
-    'NVIDIA RTX 2060',
-    'NVIDIA RTX 3060',
-    'NVIDIA RTX 4060',
-    'AMD RX 6600',
-    'AMD RX 7800 XT'
-  ];
-
-  final List<String> rams = ['8 GB', '16 GB', '32 GB', '64 GB'];
-  final List<String> storages = ['256 GB SSD', '512 GB SSD', '1 TB SSD', '2 TB SSD', '1 TB HDD'];
-  final List<String> osList = ['Windows 10', 'Windows 11', 'Linux', 'MacOS'];
 
   @override
   void initState() {
@@ -62,7 +152,8 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
     try {
       final token = await SessionManager.getAuthToken() ?? '';
       final url = Uri.parse('${ApiConfig.baseUrl}/user/${widget.userEmail}');
-      final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
+      final response =
+          await http.get(url, headers: {'Authorization': 'Bearer $token'});
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -70,11 +161,11 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
           final pc = data['user']['pcSpecs'];
           if (mounted) {
             setState(() {
-              selectedCPU = pc['cpu'];
-              selectedGPU = pc['gpu'];
-              selectedRAM = pc['ram'];
-              selectedStorage = pc['storage'];
-              selectedOS = pc['os'];
+              selectedCPU = _matchOrNull(pc['cpu'], _kCpus);
+              selectedGPU = _matchOrNull(pc['gpu'], _kGpus);
+              selectedRAM = _matchOrNull(pc['ram'], _kRams);
+              selectedStorage = _matchOrNull(pc['storage'], _kStorages);
+              selectedOS = _matchOrNull(pc['os'], _kOsList);
             });
           }
         }
@@ -84,13 +175,21 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
     }
   }
 
-  Future<void> savePc() async {
+  /// Возвращает [value] если оно есть в [list], иначе null.
+  /// Защищает от ситуации когда сохранённое значение исчезло из списка.
+  String? _matchOrNull(dynamic value, List<String> list) {
+    if (value == null) return null;
+    final s = value.toString();
+    return list.contains(s) ? s : null;
+  }
+
+  Future<void> _savePc() async {
     if (selectedCPU == null ||
         selectedGPU == null ||
         selectedRAM == null ||
         selectedStorage == null ||
         selectedOS == null) {
-      _showSnackBar("Пожалуйста, заполните все поля", Colors.orange);
+      _showSnackBar('Пожалуйста, заполните все поля', Colors.orange);
       return;
     }
 
@@ -101,18 +200,18 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
       _isSaving = true;
     });
 
-    final token = await SessionManager.getAuthToken() ?? '';
-    final url = Uri.parse('${ApiConfig.baseUrl}/add-pc');
-    final body = jsonEncode({
-      'email': widget.userEmail,
-      'cpu': selectedCPU,
-      'gpu': selectedGPU,
-      'ram': selectedRAM,
-      'storage': selectedStorage,
-      'os': selectedOS,
-    });
-
     try {
+      final token = await SessionManager.getAuthToken() ?? '';
+      final url = Uri.parse('${ApiConfig.baseUrl}/add-pc');
+      final body = jsonEncode({
+        'email': widget.userEmail,
+        'cpu': selectedCPU,
+        'gpu': selectedGPU,
+        'ram': selectedRAM,
+        'storage': selectedStorage,
+        'os': selectedOS,
+      });
+
       final response = await http.post(
         url,
         headers: {
@@ -125,39 +224,41 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
-        _showSnackBar("Характеристики ПК успешно обновлены!", const Color(0xFF4CAF50));
+        _showSnackBar(
+            'Характеристики ПК успешно обновлены!', const Color(0xFF4CAF50));
 
-        widget.onPCUpdated?.call();
-
-        await Future.delayed(const Duration(milliseconds: 800));
-
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _isSaving = false;
-          });
+        if (widget.showBackButton) {
+          // Страничный режим — возвращаемся назад
+          await Future.delayed(const Duration(milliseconds: 600));
+          if (mounted) Navigator.of(context).pop(true);
+        } else {
+          // Режим вкладки — вызываем callback и сбрасываем флаги
+          widget.onPCUpdated?.call();
+          await Future.delayed(const Duration(milliseconds: 800));
+          if (mounted) _resetSaving();
         }
       } else {
-        setState(() {
-          _isLoading = false;
-          _isSaving = false;
-        });
-        _showSnackBar("Ошибка: ${response.body}", Colors.red);
+        _resetSaving();
+        _showSnackBar('Ошибка: ${response.body}', Colors.red);
       }
     } catch (e) {
       if (!mounted) return;
+      _resetSaving();
+      _showSnackBar('Ошибка соединения: $e', Colors.red);
+    }
+  }
 
+  void _resetSaving() {
+    if (mounted) {
       setState(() {
         _isLoading = false;
         _isSaving = false;
       });
-      _showSnackBar("Ошибка соединения: $e", Colors.red);
     }
   }
 
   void _showSnackBar(String message, Color color) {
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -174,28 +275,28 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
               child: Text(
                 message,
                 style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
+                    color: Colors.white, fontWeight: FontWeight.w500),
               ),
             ),
           ],
         ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  Widget buildDropdown(
-      String label,
-      IconData icon,
-      String? value,
-      List<String> items,
-      Function(String?) onChanged) {
+  Widget _buildDropdown(
+    String label,
+    IconData icon,
+    String? value,
+    List<String> items,
+    void Function(String?) onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -206,10 +307,9 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
             Text(
               label,
               style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14),
             ),
           ],
         ),
@@ -218,33 +318,27 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
           decoration: BoxDecoration(
             color: const Color(0xFF1A1A2E),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
           ),
           child: DropdownButtonFormField<String>(
             dropdownColor: const Color(0xFF1A1A2E),
             value: value,
+            isExpanded: true,
             style: const TextStyle(color: Colors.white, fontSize: 14),
             decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               border: InputBorder.none,
               hintText: 'Выберите $label',
               hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
             ),
-            icon: Icon(
-              Icons.arrow_drop_down,
-              color: const Color(0xFF6C63FF),
-            ),
+            icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF6C63FF)),
             onChanged: onChanged,
             items: items
                 .map((e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(e, style: const TextStyle(color: Colors.white)),
-                    ))
+                    value: e,
+                    child: Text(e,
+                        style: const TextStyle(color: Colors.white))))
                 .toList(),
           ),
         ),
@@ -254,121 +348,105 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: const Color(0xFF0D0D1E),
       body: SafeArea(
         child: Column(
           children: [
+            // ── Шапка ──────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  const Text(
-                    "Мой ПК",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                  if (widget.showBackButton) ...[
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios,
+                          color: Colors.white, size: 20),
+                      onPressed:
+                          _isSaving ? null : () => Navigator.pop(context),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "Введите характеристики вашего компьютера",
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 12,
-                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Мой ПК',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Введите характеристики вашего компьютера',
+                        style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 12),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            
+
+            // ── Форма ──────────────────────────────────────────────────────
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    buildDropdown(
-                      "Процессор",
-                      Icons.memory,
-                      selectedCPU,
-                      cpus,
-                      (val) => setState(() => selectedCPU = val),
-                    ),
+                    _buildDropdown('Процессор', Icons.memory, selectedCPU,
+                        _kCpus, (v) => setState(() => selectedCPU = v)),
                     const SizedBox(height: 20),
-                    
-                    buildDropdown(
-                      "Видеокарта",
-                      Icons.videogame_asset,
-                      selectedGPU,
-                      gpus,
-                      (val) => setState(() => selectedGPU = val),
-                    ),
+                    _buildDropdown('Видеокарта', Icons.videogame_asset,
+                        selectedGPU, _kGpus,
+                        (v) => setState(() => selectedGPU = v)),
                     const SizedBox(height: 20),
-                    
-                    buildDropdown(
-                      "Оперативная память",
-                      Icons.storage,
-                      selectedRAM,
-                      rams,
-                      (val) => setState(() => selectedRAM = val),
-                    ),
+                    _buildDropdown('Оперативная память', Icons.storage,
+                        selectedRAM, _kRams,
+                        (v) => setState(() => selectedRAM = v)),
                     const SizedBox(height: 20),
-                    
-                    buildDropdown(
-                      "Хранилище",
-                      Icons.sd_storage,
-                      selectedStorage,
-                      storages,
-                      (val) => setState(() => selectedStorage = val),
-                    ),
+                    _buildDropdown('Хранилище', Icons.sd_storage,
+                        selectedStorage, _kStorages,
+                        (v) => setState(() => selectedStorage = v)),
                     const SizedBox(height: 20),
-                    
-                    buildDropdown(
-                      "Операционная система",
-                      Icons.computer,
-                      selectedOS,
-                      osList,
-                      (val) => setState(() => selectedOS = val),
-                    ),
+                    _buildDropdown('Операционная система', Icons.computer,
+                        selectedOS, _kOsList,
+                        (v) => setState(() => selectedOS = v)),
                     const SizedBox(height: 40),
-                    
+
+                    // ── Кнопка сохранить ───────────────────────────────────
                     SizedBox(
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: (_isLoading || _isSaving) ? null : savePc,
+                        onPressed: (_isLoading || _isSaving) ? null : _savePc,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF6C63FF),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                              borderRadius: BorderRadius.circular(16)),
                           elevation: 0,
-                          disabledBackgroundColor: const Color(0xFF6C63FF).withOpacity(0.5),
+                          disabledBackgroundColor:
+                              const Color(0xFF6C63FF).withOpacity(0.5),
                         ),
                         child: _isLoading
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
+                                    color: Colors.white, strokeWidth: 2),
                               )
-                            : Row(
+                            : const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
+                                children: [
                                   Icon(Icons.save_outlined, size: 20),
                                   SizedBox(width: 10),
-                                  Text(
-                                    "Сохранить",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                                  Text('Сохранить',
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600)),
                                 ],
                               ),
                       ),
@@ -381,413 +459,31 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
         ),
       ),
     );
+
+    // PopScope предотвращает закрытие во время сохранения
+    if (widget.showBackButton) {
+      return PopScope(
+        canPop: !_isSaving,
+        child: scaffold,
+      );
+    }
+    return scaffold;
   }
 }
 
-class AddPcPage extends StatefulWidget {
+// ─── Тонкая обёртка для страничной навигации ────────────────────────────────
+
+/// Используй при открытии через Navigator.push — показывает кнопку «Назад»
+/// и делает pop(true) после успешного сохранения.
+class AddPcPage extends StatelessWidget {
   final String userEmail;
   const AddPcPage({super.key, required this.userEmail});
-  
-  @override
-  State<AddPcPage> createState() => _AddPcPageState();
-}
-
-class _AddPcPageState extends State<AddPcPage>
-    with SingleTickerProviderStateMixin {
-  String? selectedCPU;
-  String? selectedGPU;
-  String? selectedRAM;
-  String? selectedStorage;
-  String? selectedOS;
-  
-  bool _isLoading = false;
-  bool _isSaving = false;
-  
-  late AnimationController _animController;
-  late Animation<double> _fadeAnimation;
-
-  final List<String> cpus = [
-    'Intel i3-12100',
-    'Intel i5-12400',
-    'Intel i7-13620h',
-    'Intel i9-14900k',
-    'AMD Ryzen 3 3200g',
-    'AMD Ryzen 5 5600x',
-    'AMD Ryzen 7 5700x3d',
-    'AMD Ryzen 9 9950x3d'
-  ];
-
-  final List<String> gpus = [
-    'NVIDIA GTX 1650',
-    'NVIDIA RTX 2060',
-    'NVIDIA RTX 3060',
-    'NVIDIA RTX 4060',
-    'AMD RX 6600',
-    'AMD RX 7800 XT'
-  ];
-
-  final List<String> rams = ['8 GB', '16 GB', '32 GB', '64 GB'];
-  final List<String> storages = ['256 GB SSD', '512 GB SSD', '1 TB SSD', '2 TB SSD', '1 TB HDD'];
-  final List<String> osList = ['Windows 10', 'Windows 11', 'Linux', 'MacOS'];
-
-  @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeInOut,
-    );
-    _animController.forward();
-    _loadUserPC();
-  }
-
-  @override
-  void dispose() {
-    _animController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadUserPC() async {
-    try {
-      final token = await SessionManager.getAuthToken() ?? '';
-      final url = Uri.parse('${ApiConfig.baseUrl}/user/${widget.userEmail}');
-      final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true && data['user']['pcSpecs'] != null) {
-          final pc = data['user']['pcSpecs'];
-          if (mounted) {
-            setState(() {
-              selectedCPU = pc['cpu'];
-              selectedGPU = pc['gpu'];
-              selectedRAM = pc['ram'];
-              selectedStorage = pc['storage'];
-              selectedOS = pc['os'];
-            });
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Ошибка загрузки данных ПК: $e');
-    }
-  }
-
-  Future<void> savePc() async {
-    if (selectedCPU == null ||
-        selectedGPU == null ||
-        selectedRAM == null ||
-        selectedStorage == null ||
-        selectedOS == null) {
-      _showSnackBar("Пожалуйста, заполните все поля", Colors.orange);
-      return;
-    }
-
-    if (_isSaving) return;
-
-    setState(() {
-      _isLoading = true;
-      _isSaving = true;
-    });
-
-    final token = await SessionManager.getAuthToken() ?? '';
-    final url = Uri.parse('${ApiConfig.baseUrl}/add-pc');
-    final body = jsonEncode({
-      'email': widget.userEmail,
-      'cpu': selectedCPU,
-      'gpu': selectedGPU,
-      'ram': selectedRAM,
-      'storage': selectedStorage,
-      'os': selectedOS,
-    });
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: body,
-      );
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        _showSnackBar("Характеристики ПК успешно обновлены!", const Color(0xFF4CAF50));
-
-        await Future.delayed(const Duration(milliseconds: 600));
-
-        if (mounted) {
-          Navigator.of(context).pop(true);
-        }
-      } else {
-        setState(() {
-          _isLoading = false;
-          _isSaving = false;
-        });
-        _showSnackBar("Ошибка: ${response.body}", Colors.red);
-      }
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-        _isSaving = false;
-      });
-      _showSnackBar("Ошибка соединения: $e", Colors.red);
-    }
-  }
-
-  void _showSnackBar(String message, Color color) {
-    if (!mounted) return;
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              color == const Color(0xFF4CAF50) 
-                  ? Icons.check_circle 
-                  : Icons.error_outline,
-              color: Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  Widget buildDropdown(
-      String label,
-      IconData icon,
-      String? value,
-      List<String> items,
-      Function(String?) onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: const Color(0xFF6C63FF), size: 18),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A2E),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-            ),
-          ),
-          child: DropdownButtonFormField<String>(
-            dropdownColor: const Color(0xFF1A1A2E),
-            value: value,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-              border: InputBorder.none,
-              hintText: 'Выберите $label',
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-            ),
-            icon: Icon(
-              Icons.arrow_drop_down,
-              color: const Color(0xFF6C63FF),
-            ),
-            onChanged: onChanged,
-            items: items
-                .map((e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(e, style: const TextStyle(color: Colors.white)),
-                    ))
-                .toList(),
-          ),
-        ),
-      ],
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_isSaving) {
-          return false;
-        }
-        return true;
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFF0D0D1E),
-        body: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-                      onPressed: _isSaving ? null : () => Navigator.pop(context),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Мой ПК",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          "Введите характеристики вашего компьютера",
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              
-              Expanded(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        buildDropdown(
-                          "Процессор",
-                          Icons.memory,
-                          selectedCPU,
-                          cpus,
-                          (val) => setState(() => selectedCPU = val),
-                        ),
-                        const SizedBox(height: 20),
-                        
-                        buildDropdown(
-                          "Видеокарта",
-                          Icons.videogame_asset,
-                          selectedGPU,
-                          gpus,
-                          (val) => setState(() => selectedGPU = val),
-                        ),
-                        const SizedBox(height: 20),
-                        
-                        buildDropdown(
-                          "Оперативная память",
-                          Icons.storage,
-                          selectedRAM,
-                          rams,
-                          (val) => setState(() => selectedRAM = val),
-                        ),
-                        const SizedBox(height: 20),
-                        
-                        buildDropdown(
-                          "Хранилище",
-                          Icons.sd_storage,
-                          selectedStorage,
-                          storages,
-                          (val) => setState(() => selectedStorage = val),
-                        ),
-                        const SizedBox(height: 20),
-                        
-                        buildDropdown(
-                          "Операционная система",
-                          Icons.computer,
-                          selectedOS,
-                          osList,
-                          (val) => setState(() => selectedOS = val),
-                        ),
-                        const SizedBox(height: 40),
-                        
-                        SizedBox(
-                          height: 54,
-                          child: ElevatedButton(
-                            onPressed: (_isLoading || _isSaving) ? null : savePc,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6C63FF),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 0,
-                              disabledBackgroundColor: const Color(0xFF6C63FF).withOpacity(0.5),
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      Icon(Icons.save_outlined, size: 20),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        "Сохранить",
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return AddPcPageWithCallback(
+      userEmail: userEmail,
+      showBackButton: true,
     );
   }
 }
