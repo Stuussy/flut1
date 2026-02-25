@@ -59,7 +59,7 @@ class _MainPageState extends State<MainPage> {
         key: _homePageKey,
         userEmail: widget.userEmail,
       ),
-      AddPcPageWrapper(
+      AddPcPageWithCallback(
         userEmail: widget.userEmail,
         onPCUpdated: _onPCUpdated,
       ),
@@ -386,27 +386,8 @@ class _OnboardingStep {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Wrapper widgets (unchanged from original)
+// Wrapper widgets
 // ─────────────────────────────────────────────────────────────────────────────
-
-class AddPcPageWrapper extends StatelessWidget {
-  final String userEmail;
-  final VoidCallback onPCUpdated;
-
-  const AddPcPageWrapper({
-    super.key,
-    required this.userEmail,
-    required this.onPCUpdated,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AddPcPageWithCallback(
-      userEmail: userEmail,
-      onPCUpdated: onPCUpdated,
-    );
-  }
-}
 
 class HomePageRefresh extends StatefulWidget {
   final String userEmail;

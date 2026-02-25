@@ -143,11 +143,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           final loaded = raw.map<Map<String, dynamic>>((g) {
             final title = g['title'] as String;
             final meta = _gamesMeta[title];
+
+            // Используем данные из API (image/subtitle), при отсутствии —
+            // fallback на локальный _gamesMeta, потом дефолт.
+            final apiImage = (g['image'] as String? ?? '').trim();
+            final apiSubtitle = (g['subtitle'] as String? ?? '').trim();
+
             return {
               "title": title,
-              "subtitle": meta?['subtitle'] ?? "Игра",
+              "subtitle": apiSubtitle.isNotEmpty
+                  ? apiSubtitle
+                  : (meta?['subtitle'] ?? "Игра"),
               "colors": meta?['colors'] ?? _defaultColors,
-              "image": meta?['image'] ?? "",
+              "image": apiImage.isNotEmpty
+                  ? apiImage
+                  : (meta?['image'] ?? ""),
             };
           }).toList();
           if (mounted) {
