@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'add_pc_page.dart';
 import 'game_info_page.dart';
+import 'settings_page.dart';
+import 'about_page.dart';
 import '../utils/session_manager.dart';
 import '../utils/api_config.dart';
 import '../utils/theme_manager.dart';
@@ -43,11 +45,13 @@ class _ProfilePageState extends State<ProfilePage>
     _fadeAnimation =
         CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
     _fadeController.forward();
+    FavoritesManager.changeCount.addListener(_loadFavCount);
     _loadAll();
   }
 
   @override
   void dispose() {
+    FavoritesManager.changeCount.removeListener(_loadFavCount);
     _fadeController.dispose();
     super.dispose();
   }
@@ -1030,6 +1034,32 @@ class _ProfilePageState extends State<ProfilePage>
                         );
                         if (result == true && mounted) await fetchUserData();
                       },
+                showDivider: true,
+              ),
+
+              // Настройки приложения
+              _settingsTile(
+                icon: Icons.settings_rounded,
+                iconColor: const Color(0xFF6C63FF),
+                label: 'Настройки',
+                subtitle: 'Тема, кэш, версия приложения',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SettingsPage()),
+                ),
+                showDivider: true,
+              ),
+
+              // О приложении
+              _settingsTile(
+                icon: Icons.info_outline_rounded,
+                iconColor: const Color(0xFFFFB300),
+                label: 'О приложении',
+                subtitle: 'Как работает расчёт FPS, FAQ',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AboutPage()),
+                ),
                 showDivider: false,
               ),
             ],

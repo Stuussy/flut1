@@ -139,6 +139,20 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
   String? selectedStorage;
   String? selectedOS;
 
+  // Флаги режима ручного ввода для каждого поля
+  bool _cpuManual = false;
+  bool _gpuManual = false;
+  bool _ramManual = false;
+  bool _storageManual = false;
+  bool _osManual = false;
+
+  // Контроллеры для полей ручного ввода
+  final _cpuCtrl = TextEditingController();
+  final _gpuCtrl = TextEditingController();
+  final _ramCtrl = TextEditingController();
+  final _storageCtrl = TextEditingController();
+  final _osCtrl = TextEditingController();
+
   bool _isLoading = false;
   bool _isSaving = false;
 
@@ -180,7 +194,176 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
   String? _matchOrNull(dynamic value, List<String> list) {
     if (value == null) return null;
     final s = value.toString();
-    return list.contains(s) ? s : null;
+    // Если значение не в списке — переключаем в режим ручного ввода
+    return list.contains(s) ? s : s;
+  }
+
+  void _setManual(String field, bool isManual) {
+    setState(() {
+      switch (field) {
+        case 'cpu':
+          _cpuManual = isManual;
+          if (isManual) { selectedCPU = null; _cpuCtrl.clear(); }
+        case 'gpu':
+          _gpuManual = isManual;
+          if (isManual) { selectedGPU = null; _gpuCtrl.clear(); }
+        case 'ram':
+          _ramManual = isManual;
+          if (isManual) { selectedRAM = null; _ramCtrl.clear(); }
+        case 'storage':
+          _storageManual = isManual;
+          if (isManual) { selectedStorage = null; _storageCtrl.clear(); }
+        case 'os':
+          _osManual = isManual;
+          if (isManual) { selectedOS = null; _osCtrl.clear(); }
+      }
+    });
+  }
+
+  TextEditingController _ctrlFor(String fieldKey) {
+    switch (fieldKey) {
+      case 'cpu': return _cpuCtrl;
+      case 'gpu': return _gpuCtrl;
+      case 'ram': return _ramCtrl;
+      case 'storage': return _storageCtrl;
+      default: return _osCtrl;
+    }
+  }
+
+  /// Виджет поля с возможностью ручного ввода.
+  Widget _buildFieldWithManual({
+    required String fieldKey,
+    required String label,
+    required IconData icon,
+    required String? value,
+    required List<String> items,
+    required bool isManual,
+    required void Function(String?) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: const Color(0xFF6C63FF), size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () => _setManual(fieldKey, !isManual),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isManual
+                      ? const Color(0xFF6C63FF).withOpacity(0.2)
+                      : Colors.white.withOpacity(0.07),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isManual
+                        ? const Color(0xFF6C63FF).withOpacity(0.5)
+                        : Colors.white.withOpacity(0.1),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isManual ? Icons.list_rounded : Icons.edit_rounded,
+                      color: isManual
+                          ? const Color(0xFF6C63FF)
+                          : Colors.white.withOpacity(0.5),
+                      size: 13,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      isManual ? 'Из списка' : 'Вручную',
+                      style: TextStyle(
+                        color: isManual
+                            ? const Color(0xFF6C63FF)
+                            : Colors.white.withOpacity(0.5),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (isManual)
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A2E),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: const Color(0xFF6C63FF).withOpacity(0.4)),
+            ),
+            child: TextField(
+              enabled: !_isSaving,
+              controller: _ctrlFor(fieldKey),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 14),
+                border: InputBorder.none,
+                hintText: 'Введите $label вручную',
+                hintStyle: TextStyle(
+                    color: Colors.white.withOpacity(0.35), fontSize: 13),
+                suffixIcon: value != null && value.isNotEmpty
+                    ? Icon(Icons.check_circle,
+                        color: const Color(0xFF4CAF50).withOpacity(0.8),
+                        size: 18)
+                    : null,
+              ),
+              onChanged: onChanged,
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A2E),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+            ),
+            child: DropdownButtonFormField<String>(
+              dropdownColor: const Color(0xFF1A1A2E),
+              value: (value != null && items.contains(value)) ? value : null,
+              isExpanded: true,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 14),
+                border: InputBorder.none,
+                hintText: 'Выберите $label',
+                hintStyle: TextStyle(
+                    color: Colors.white.withOpacity(0.4), fontSize: 14),
+              ),
+              icon: const Icon(Icons.arrow_drop_down,
+                  color: Color(0xFF6C63FF)),
+              onChanged: onChanged,
+              items: items
+                  .map((e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(e,
+                          style: const TextStyle(color: Colors.white))))
+                  .toList(),
+            ),
+          ),
+      ],
+    );
   }
 
   Future<void> _savePc() async {
@@ -246,6 +429,16 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
       _resetSaving();
       _showSnackBar('Ошибка соединения: $e', Colors.red);
     }
+  }
+
+  @override
+  void dispose() {
+    _cpuCtrl.dispose();
+    _gpuCtrl.dispose();
+    _ramCtrl.dispose();
+    _storageCtrl.dispose();
+    _osCtrl.dispose();
+    super.dispose();
   }
 
   void _resetSaving() {
@@ -397,24 +590,55 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildDropdown('Процессор', Icons.memory, selectedCPU,
-                        _kCpus, (v) => setState(() => selectedCPU = v)),
+                    _buildFieldWithManual(
+                      fieldKey: 'cpu',
+                      label: 'Процессор',
+                      icon: Icons.memory,
+                      value: selectedCPU,
+                      items: _kCpus,
+                      isManual: _cpuManual,
+                      onChanged: (v) => setState(() => selectedCPU = v),
+                    ),
                     const SizedBox(height: 20),
-                    _buildDropdown('Видеокарта', Icons.videogame_asset,
-                        selectedGPU, _kGpus,
-                        (v) => setState(() => selectedGPU = v)),
+                    _buildFieldWithManual(
+                      fieldKey: 'gpu',
+                      label: 'Видеокарта',
+                      icon: Icons.videogame_asset,
+                      value: selectedGPU,
+                      items: _kGpus,
+                      isManual: _gpuManual,
+                      onChanged: (v) => setState(() => selectedGPU = v),
+                    ),
                     const SizedBox(height: 20),
-                    _buildDropdown('Оперативная память', Icons.storage,
-                        selectedRAM, _kRams,
-                        (v) => setState(() => selectedRAM = v)),
+                    _buildFieldWithManual(
+                      fieldKey: 'ram',
+                      label: 'Оперативная память',
+                      icon: Icons.storage,
+                      value: selectedRAM,
+                      items: _kRams,
+                      isManual: _ramManual,
+                      onChanged: (v) => setState(() => selectedRAM = v),
+                    ),
                     const SizedBox(height: 20),
-                    _buildDropdown('Хранилище', Icons.sd_storage,
-                        selectedStorage, _kStorages,
-                        (v) => setState(() => selectedStorage = v)),
+                    _buildFieldWithManual(
+                      fieldKey: 'storage',
+                      label: 'Хранилище',
+                      icon: Icons.sd_storage,
+                      value: selectedStorage,
+                      items: _kStorages,
+                      isManual: _storageManual,
+                      onChanged: (v) => setState(() => selectedStorage = v),
+                    ),
                     const SizedBox(height: 20),
-                    _buildDropdown('Операционная система', Icons.computer,
-                        selectedOS, _kOsList,
-                        (v) => setState(() => selectedOS = v)),
+                    _buildFieldWithManual(
+                      fieldKey: 'os',
+                      label: 'Операционная система',
+                      icon: Icons.computer,
+                      value: selectedOS,
+                      items: _kOsList,
+                      isManual: _osManual,
+                      onChanged: (v) => setState(() => selectedOS = v),
+                    ),
                     const SizedBox(height: 40),
 
                     // ── Кнопка сохранить ───────────────────────────────────

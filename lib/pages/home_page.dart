@@ -170,6 +170,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     _carouselController = PageController(viewportFraction: 0.8);
 
+    // Слушаем изменения избранного из любого места приложения
+    FavoritesManager.changeCount.addListener(_loadFavorites);
+
     _loadGames();
     _loadFavorites();
   }
@@ -246,16 +249,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   // ─── Избранное ───────────────────────────────────────────────────────────
   Future<void> _loadFavorites() async {
     final favs = await FavoritesManager.getFavorites();
-    if (mounted) {
-      setState(() {
-        _favoriteNames = favs;
-      });
-    }
+    if (mounted) setState(() => _favoriteNames = favs);
   }
 
   Future<void> _toggleFavorite(String gameTitle) async {
+    final isFav = _favoriteNames.contains(gameTitle);
+
+    // Проверяем лимит ДО запроса — моментальная обратная связь
+    if (!isFav && _favoriteNames.length >= FavoritesManager.maxFavorites) {
+      _showFavoritesLimitSheet();
+      return;
+    }
+
+    // ── Оптимистичное обновление (UI меняется немедленно) ─────────────────
+    setState(() {
+      if (isFav) {
+        _favoriteNames =
+            _favoriteNames.where((n) => n != gameTitle).toList();
+      } else {
+        _favoriteNames = [..._favoriteNames, gameTitle];
+      }
+    });
+
     try {
       final added = await FavoritesManager.toggleFavorite(gameTitle);
+      // Синхронизируемся с реальным хранилищем
       await _loadFavorites();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -276,23 +294,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         );
       }
     } catch (e) {
+      // Откатываем оптимистичное обновление при ошибке
+      await _loadFavorites();
       if (mounted) {
-        // При превышении лимита — показываем объяснительный bottom sheet
-        final msg = e.toString();
-        if (msg.contains('Максимум') || msg.contains('избранных')) {
-          _showFavoritesLimitSheet();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(msg.replaceFirst('Exception: ', '')),
-              backgroundColor: Colors.orange,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
       }
     }
   }
@@ -340,6 +354,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    FavoritesManager.changeCount.removeListener(_loadFavorites);
     _carouselTimer?.cancel();
     _carouselController.dispose();
     _fadeController.dispose();
@@ -379,8 +394,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildContent() {
-    return SingleChildScrollView(
-      child: Column(
+    return RefreshIndicator(
+      color: const Color(0xFF6C63FF),
+      backgroundColor: const Color(0xFF1A1A2E),
+      onRefresh: () async {
+        await _loadGames();
+        await _loadFavorites();
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
@@ -453,6 +476,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
           const SizedBox(height: 20),
         ],
+      ),
       ),
     );
   }

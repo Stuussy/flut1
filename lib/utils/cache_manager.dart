@@ -55,4 +55,18 @@ class CacheManager {
     await prefs.remove(_dataKey(email, gameTitle));
     await prefs.remove(_tsKey(email, gameTitle));
   }
+
+  /// Полная очистка кэша совместимости (все игры, все пользователи).
+  static Future<int> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys().toList();
+    int count = 0;
+    for (final key in keys) {
+      if (key.startsWith(_dataPrefix) || key.startsWith(_tsPrefix)) {
+        await prefs.remove(key);
+        count++;
+      }
+    }
+    return count ~/ 2; // пар данных
+  }
 }

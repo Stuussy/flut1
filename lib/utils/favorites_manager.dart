@@ -1,8 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FavoritesManager {
   static const String _key = 'favorite_games';
   static const int maxFavorites = 5;
+
+  /// Инкрементируется при каждом изменении избранного.
+  /// Слушайте его, чтобы реактивно обновить UI в любой части приложения.
+  static final ValueNotifier<int> changeCount = ValueNotifier(0);
 
   static Future<List<String>> getFavorites() async {
     final prefs = await SharedPreferences.getInstance();
@@ -23,6 +28,7 @@ class FavoritesManager {
     if (favorites.contains(gameTitle)) {
       favorites.remove(gameTitle);
       await prefs.setStringList(_key, favorites);
+      changeCount.value++;
       return false;
     } else {
       if (favorites.length >= maxFavorites) {
@@ -30,6 +36,7 @@ class FavoritesManager {
       }
       favorites.add(gameTitle);
       await prefs.setStringList(_key, favorites);
+      changeCount.value++;
       return true;
     }
   }
