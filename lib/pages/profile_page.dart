@@ -398,7 +398,7 @@ class _ProfilePageState extends State<ProfilePage>
                     SliverToBoxAdapter(child: _buildHeroHeader()),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                         child: _buildStatsRow(),
                       ),
                     ),
@@ -430,7 +430,11 @@ class _ProfilePageState extends State<ProfilePage>
                         child: _buildLogoutButton(),
                       ),
                     ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 40)),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 40 + MediaQuery.of(context).padding.bottom + 72,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -554,32 +558,29 @@ class _ProfilePageState extends State<ProfilePage>
 
   // ── stats row ─────────────────────────────────────────────────────────────────
   Widget _buildStatsRow() {
-    return Transform.translate(
-      offset: const Offset(0, -18),
-      child: Row(
-        children: [
-          _statCard(
-            icon: Icons.history_rounded,
-            label: 'Проверок',
-            value: '${checkHistory.length}',
-            color: _purple,
-          ),
-          const SizedBox(width: 10),
-          _statCard(
-            icon: Icons.star_rounded,
-            label: 'Избранных',
-            value: '$_favoritesCount / 5',
-            color: _amber,
-          ),
-          const SizedBox(width: 10),
-          _statCard(
-            icon: Icons.speed_rounded,
-            label: 'Лучший FPS',
-            value: checkHistory.isEmpty ? '—' : '$_bestFps',
-            color: _green,
-          ),
-        ],
-      ),
+    return Row(
+      children: [
+        _statCard(
+          icon: Icons.history_rounded,
+          label: 'Проверок',
+          value: '${checkHistory.length}',
+          color: _purple,
+        ),
+        const SizedBox(width: 10),
+        _statCard(
+          icon: Icons.star_rounded,
+          label: 'Избранных',
+          value: '$_favoritesCount / 5',
+          color: _amber,
+        ),
+        const SizedBox(width: 10),
+        _statCard(
+          icon: Icons.speed_rounded,
+          label: 'Лучший FPS',
+          value: checkHistory.isEmpty ? '—' : '$_bestFps',
+          color: _green,
+        ),
+      ],
     );
   }
 
