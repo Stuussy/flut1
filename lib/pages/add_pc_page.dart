@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../utils/session_manager.dart';
 
 class AddPcPageWithCallback extends StatefulWidget {
   final String userEmail;
@@ -58,9 +59,10 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
 
   Future<void> _loadUserPC() async {
     try {
+      final token = await SessionManager.getAuthToken() ?? '';
       final url = Uri.parse('http://localhost:3001/user/${widget.userEmail}');
-      final response = await http.get(url);
-      
+      final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['user']['pcSpecs'] != null) {
@@ -92,12 +94,13 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
     }
 
     if (_isSaving) return;
-    
+
     setState(() {
       _isLoading = true;
       _isSaving = true;
     });
 
+    final token = await SessionManager.getAuthToken() ?? '';
     final url = Uri.parse('http://localhost:3001/add-pc');
     final body = jsonEncode({
       'email': widget.userEmail,
@@ -111,19 +114,22 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
     try {
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: body,
       );
-      
+
       if (!mounted) return;
-      
+
       if (response.statusCode == 200) {
         _showSnackBar("Характеристики ПК успешно обновлены!", const Color(0xFF4CAF50));
-        
+
         widget.onPCUpdated?.call();
-        
+
         await Future.delayed(const Duration(milliseconds: 800));
-        
+
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -139,7 +145,7 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
       }
     } catch (e) {
       if (!mounted) return;
-      
+
       setState(() {
         _isLoading = false;
         _isSaving = false;
@@ -150,14 +156,14 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
 
   void _showSnackBar(String message, Color color) {
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
             Icon(
-              color == const Color(0xFF4CAF50) 
-                  ? Icons.check_circle 
+              color == const Color(0xFF4CAF50)
+                  ? Icons.check_circle
                   : Icons.error_outline,
               color: Colors.white,
               size: 20,
@@ -446,9 +452,10 @@ class _AddPcPageState extends State<AddPcPage>
 
   Future<void> _loadUserPC() async {
     try {
+      final token = await SessionManager.getAuthToken() ?? '';
       final url = Uri.parse('http://localhost:3001/user/${widget.userEmail}');
-      final response = await http.get(url);
-      
+      final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['user']['pcSpecs'] != null) {
@@ -480,12 +487,13 @@ class _AddPcPageState extends State<AddPcPage>
     }
 
     if (_isSaving) return;
-    
+
     setState(() {
       _isLoading = true;
       _isSaving = true;
     });
 
+    final token = await SessionManager.getAuthToken() ?? '';
     final url = Uri.parse('http://localhost:3001/add-pc');
     final body = jsonEncode({
       'email': widget.userEmail,
@@ -499,17 +507,20 @@ class _AddPcPageState extends State<AddPcPage>
     try {
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: body,
       );
-      
+
       if (!mounted) return;
-      
+
       if (response.statusCode == 200) {
         _showSnackBar("Характеристики ПК успешно обновлены!", const Color(0xFF4CAF50));
-        
+
         await Future.delayed(const Duration(milliseconds: 600));
-        
+
         if (mounted) {
           Navigator.of(context).pop(true);
         }
@@ -522,7 +533,7 @@ class _AddPcPageState extends State<AddPcPage>
       }
     } catch (e) {
       if (!mounted) return;
-      
+
       setState(() {
         _isLoading = false;
         _isSaving = false;

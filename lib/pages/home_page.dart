@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:gamepulse/pages/game_info_page.dart';
 import 'package:gamepulse/pages/performance_graph_page.dart';
 
 class HomePage extends StatefulWidget {
   final String userEmail;
-  
+
   const HomePage({super.key, required this.userEmail});
 
   @override
@@ -15,108 +17,98 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  
+
   late PageController _carouselController;
   int _currentCarouselPage = 0;
   Timer? _carouselTimer;
 
-  final List<Map<String, dynamic>> games = [
-    {
-      "title": "Counter-Strike 2",
+  List<Map<String, dynamic>> games = [];
+
+  // Local UI metadata for known games; new games get defaults
+  static const Map<String, Map<String, dynamic>> _gamesMeta = {
+    "Counter-Strike 2": {
       "subtitle": "Тактический шутер",
       "colors": [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
       "image": "https://cdn.akamai.steamstatic.com/steam/apps/730/header.jpg",
     },
-    {
-      "title": "PUBG: Battlegrounds",
+    "PUBG: Battlegrounds": {
       "subtitle": "Королевская битва",
       "colors": [Color(0xFF4A90E2), Color(0xFF5B9BD5)],
       "image": "https://cdn.akamai.steamstatic.com/steam/apps/578080/header.jpg",
     },
-    {
-      "title": "Minecraft",
+    "Minecraft": {
       "subtitle": "Песочница выживания",
       "colors": [Color(0xFF4CAF50), Color(0xFF66BB6A)],
       "image": "https://ichef.bbci.co.uk/news/480/cpsprodpb/15F8/production/_131442650_mediaitem131442649.jpg.webp",
     },
-    {
-      "title": "Valorant",
+    "Valorant": {
       "subtitle": "Онлайн-шутер",
       "colors": [Color(0xFFE91E63), Color(0xFFF48FB1)],
       "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ06HnrYEhu3GWf9WQ80DN9RVNBxJf8pr96koaIzq_rzlnDT7C9wJjgwIcq1cy4hShwCjt4wnoN-bEEXE8Hxut7bwGz1Uglmv3l_0igGg&s=10",
     },
-    {
-      "title": "Cyberpunk 2077",
+    "Cyberpunk 2077": {
       "subtitle": "Ролевая игра",
       "colors": [Color(0xFFFFEB3B), Color(0xFFFFC107)],
       "image": "https://cdn.akamai.steamstatic.com/steam/apps/1091500/header.jpg",
     },
-    {
-      "title": "Fortnite",
+    "Fortnite": {
       "subtitle": "Battle Royale",
       "colors": [Color(0xFF9C27B0), Color(0xFFBA68C8)],
       "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDXJqIDmoPg6jnjMrZEQTJzNpGPOdXfEaSz9nYHkryP72XPC9LZCiyuZbS_Cd0fV2ZyUMg0f8Go58QhGsdBDtCqSitSkDUPgJ-ewQKqUs&s=10",
     },
-    {
-      "title": "GTA V",
+    "GTA V": {
       "subtitle": "Экшен приключения",
       "colors": [Color(0xFFFF5722), Color(0xFFFF7043)],
       "image": "https://cdn.akamai.steamstatic.com/steam/apps/271590/header.jpg",
     },
-    {
-      "title": "The Witcher 3",
+    "The Witcher 3": {
       "subtitle": "RPG",
       "colors": [Color(0xFF607D8B), Color(0xFF78909C)],
       "image": "https://cdn.akamai.steamstatic.com/steam/apps/292030/header.jpg",
     },
-    {
-      "title": "Apex Legends",
+    "Apex Legends": {
       "subtitle": "Battle Royale",
       "colors": [Color(0xFFF44336), Color(0xFFEF5350)],
       "image": "https://cdn.akamai.steamstatic.com/steam/apps/1172470/header.jpg",
     },
-    {
-      "title": "Dota 2",
+    "Dota 2": {
       "subtitle": "MOBA",
       "colors": [Color(0xFF3F51B5), Color(0xFF5C6BC0)],
       "image": "https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg",
     },
-    {
-      "title": "League of Legends",
+    "League of Legends": {
       "subtitle": "MOBA",
       "colors": [Color(0xFF00BCD4), Color(0xFF26C6DA)],
       "image": "https://i0.wp.com/highschool.latimes.com/wp-content/uploads/2021/09/league-of-legends.jpeg?fit=1607%2C895&ssl=1",
     },
-    {
-      "title": "Overwatch 2",
+    "Overwatch 2": {
       "subtitle": "Командный шутер",
       "colors": [Color(0xFFFF9800), Color(0xFFFFB74D)],
       "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTC0OSl0PFIUPiMZSXug145CxVQ2O6quodtg&s",
     },
-    {
-      "title": "Red Dead Redemption 2",
+    "Red Dead Redemption 2": {
       "subtitle": "Приключенческий экшен",
       "colors": [Color(0xFF795548), Color(0xFF8D6E63)],
       "image": "https://cdn.akamai.steamstatic.com/steam/apps/1174180/header.jpg",
     },
-    {
-      "title": "Elden Ring",
+    "Elden Ring": {
       "subtitle": "RPG",
       "colors": [Color(0xFF9E9E9E), Color(0xFFBDBDBD)],
       "image": "https://cdn.akamai.steamstatic.com/steam/apps/1245620/header.jpg",
     },
-    {
-      "title": "Starfield",
+    "Starfield": {
       "subtitle": "Космическая RPG",
       "colors": [Color(0xFF1A237E), Color(0xFF283593)],
       "image": "https://cdn.akamai.steamstatic.com/steam/apps/1716740/header.jpg",
     },
-  ];
+  };
+
+  static const List<Color> _defaultColors = [Color(0xFF6C63FF), Color(0xFF4CAF50)];
 
   @override
   void initState() {
     super.initState();
-    
+
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -128,13 +120,46 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _fadeController.forward();
 
     _carouselController = PageController(viewportFraction: 0.8);
-    
-    _startCarouselAutoScroll();
+
+    _loadGames();
+  }
+
+  Future<void> _loadGames() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:3001/games'),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          final List<dynamic> raw = data['games'];
+          final loaded = raw.map<Map<String, dynamic>>((g) {
+            final title = g['title'] as String;
+            final meta = _gamesMeta[title];
+            return {
+              "title": title,
+              "subtitle": meta?['subtitle'] ?? "Игра",
+              "colors": meta?['colors'] ?? _defaultColors,
+              "image": meta?['image'] ?? "",
+            };
+          }).toList();
+          if (mounted) {
+            setState(() {
+              games = loaded;
+            });
+            _startCarouselAutoScroll();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Ошибка загрузки игр: $e");
+    }
   }
 
   void _startCarouselAutoScroll() {
+    _carouselTimer?.cancel();
     _carouselTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_carouselController.hasClients) {
+      if (_carouselController.hasClients && games.isNotEmpty) {
         int nextPage = (_currentCarouselPage + 1) % games.length;
         _carouselController.animateToPage(
           nextPage,
@@ -161,50 +186,56 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: Column(
           children: [
             _buildAppBar(),
-            
+
             Expanded(
               child: FadeTransition(
                 opacity: _fadeAnimation,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-                      
-                      _buildCarousel(),
-                      
-                      const SizedBox(height: 32),
-                      
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
+                child: games.isEmpty
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF6C63FF),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.videogame_asset,
-                              color: Color(0xFF6C63FF),
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            const Text(
-                              "Все игры",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
+                            const SizedBox(height: 20),
+
+                            _buildCarousel(),
+
+                            const SizedBox(height: 32),
+
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Row(
+                                children: const [
+                                  Icon(
+                                    Icons.videogame_asset,
+                                    color: Color(0xFF6C63FF),
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Все игры",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
+
+                            const SizedBox(height: 16),
+
+                            _buildGameGrid(),
+
+                            const SizedBox(height: 20),
                           ],
                         ),
                       ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      _buildGameGrid(),
-                      
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
               ),
             ),
           ],
@@ -253,7 +284,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ],
             ),
           ),
-          
+
           GestureDetector(
             onTap: () {
               Navigator.push(
@@ -297,18 +328,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         itemCount: games.length,
         itemBuilder: (context, index) {
           final game = games[index];
-          
+
           return AnimatedBuilder(
             animation: _carouselController,
             builder: (context, child) {
               double scale = 1.0;
-              
+
               if (_carouselController.position.haveDimensions) {
                 final currentPage = _carouselController.page ?? 0;
                 final distance = (currentPage - index).abs();
                 scale = 1.0 - (distance * 0.15).clamp(0.0, 0.15);
               }
-              
+
               return Transform.scale(
                 scale: scale,
                 child: child,
@@ -353,19 +384,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           ),
                         ),
                       ),
-                      
-                      Image.network(
-                        game["image"],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            color: Colors.white.withOpacity(0.4),
-                            size: 40,
-                          ),
+
+                      if ((game["image"] as String).isNotEmpty)
+                        Image.network(
+                          game["image"],
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                         ),
-                      ),
-                      
+
                       Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -379,7 +405,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           ),
                         ),
                       ),
-                      
+
                       Positioned(
                         bottom: 12,
                         left: 12,
@@ -436,7 +462,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         itemCount: games.length,
         itemBuilder: (context, index) {
           final game = games[index];
-          
+
           return GestureDetector(
             onTap: () {
               Navigator.push(
@@ -475,19 +501,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-                    
-                    Image.network(
-                      game["image"],
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Center(
-                        child: Icon(
-                          Icons.broken_image,
-                          color: Colors.white.withOpacity(0.4),
-                          size: 50,
-                        ),
+
+                    if ((game["image"] as String).isNotEmpty)
+                      Image.network(
+                        game["image"],
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const SizedBox.shrink(),
                       ),
-                    ),
-                    
+
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -501,7 +523,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-                    
+
                     Positioned(
                       bottom: 0,
                       left: 0,
@@ -526,7 +548,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             Text(
                               game["subtitle"]!,
                               style: TextStyle(
-                                color: game["colors"][0],
+                                color: (game["colors"] as List<Color>)[0],
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -543,9 +565,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 color: Colors.white.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Row(
+                              child: const Row(
                                 mainAxisSize: MainAxisSize.min,
-                                children: const [
+                                children: [
                                   Icon(
                                     Icons.play_arrow,
                                     color: Colors.white,

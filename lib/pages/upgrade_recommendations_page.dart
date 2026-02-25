@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import 'ai_chat_page.dart';
+import '../utils/session_manager.dart';
 
 class UpgradeRecommendationsPage extends StatefulWidget {
   final String userEmail;
@@ -54,12 +55,16 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
 
   Future<void> loadRecommendations() async {
     setState(() => isLoading = true);
-    
+
     try {
+      final token = await SessionManager.getAuthToken() ?? '';
       final url = Uri.parse('http://localhost:3001/upgrade-recommendations');
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({
           'email': widget.userEmail,
           'gameTitle': widget.gameTitle,

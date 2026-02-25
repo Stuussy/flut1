@@ -21,11 +21,7 @@ class _ProfilePageState extends State<ProfilePage>
   late Animation<double> _fadeAnimation;
   bool _isRefreshing = false;
 
-  final List<Map<String, dynamic>> checkHistory = [
-    {"game": "Counter-Strike 2", "fps": "200 FPS", "result": "Отлично", "icon": Icons.check_circle, "color": Color(0xFF4CAF50)},
-    {"game": "PUBG: Battlegrounds", "fps": "80 FPS", "result": "Хорошо", "icon": Icons.thumb_up, "color": Color(0xFF6C63FF)},
-    {"game": "Valorant", "fps": "150 FPS", "result": "Отлично", "icon": Icons.check_circle, "color": Color(0xFF4CAF50)},
-  ];
+  List<Map<String, dynamic>> checkHistory = [];
 
   @override
   void initState() {
@@ -53,36 +49,76 @@ class _ProfilePageState extends State<ProfilePage>
 
   Future<void> fetchUserData() async {
     if (_isRefreshing) return;
-    
+
     setState(() {
       _isRefreshing = true;
     });
 
     try {
+      final token = await SessionManager.getAuthToken() ?? '';
       final url = Uri.parse('http://localhost:3001/user/${widget.userEmail}');
-      final response = await http.get(url);
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
           if (mounted) {
+            final rawHistory =
+                (data['user']['checkHistory'] as List<dynamic>? ?? []);
             setState(() {
               userData = data['user'];
+              checkHistory = rawHistory.map((e) {
+                final status = e['status'] as String? ?? '';
+                return {
+                  'game': e['game'] as String? ?? '',
+                  'fps': '${e['fps'] ?? 0} FPS',
+                  'result': _statusText(status),
+                  'icon': _statusIcon(status),
+                  'color': _statusColor(status),
+                };
+              }).toList();
               _isRefreshing = false;
             });
           }
         }
       } else {
-        setState(() {
-          _isRefreshing = false;
-        });
+        if (mounted) setState(() => _isRefreshing = false);
       }
     } catch (e) {
       debugPrint("Ошибка загрузки профиля: $e");
-      if (mounted) {
-        setState(() {
-          _isRefreshing = false;
-        });
-      }
+      if (mounted) setState(() => _isRefreshing = false);
+    }
+  }
+
+  String _statusText(String status) {
+    switch (status) {
+      case 'excellent': return 'Отлично';
+      case 'good': return 'Хорошо';
+      case 'playable': return 'Играбельно';
+      case 'insufficient': return 'Недостаточно';
+      default: return 'Неизвестно';
+    }
+  }
+
+  IconData _statusIcon(String status) {
+    switch (status) {
+      case 'excellent': return Icons.check_circle;
+      case 'good': return Icons.thumb_up;
+      case 'playable': return Icons.warning;
+      case 'insufficient': return Icons.error;
+      default: return Icons.help;
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'excellent': return const Color(0xFF4CAF50);
+      case 'good': return const Color(0xFF6C63FF);
+      case 'playable': return const Color(0xFFFFA726);
+      case 'insufficient': return Colors.red;
+      default: return Colors.grey;
     }
   }
 
@@ -216,7 +252,19 @@ class _ProfilePageState extends State<ProfilePage>
 
                         _buildSectionTitle("История проверок", Icons.history),
                         const SizedBox(height: 16),
-                        ...checkHistory.map((check) => _buildHistoryCard(check)).toList(),
+                        if (checkHistory.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Text(
+                              "Вы ещё не проверяли совместимость игр",
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.4),
+                                fontSize: 13,
+                              ),
+                            ),
+                          )
+                        else
+                          ...checkHistory.map((check) => _buildHistoryCard(check)).toList(),
 
                         const SizedBox(height: 32),
 

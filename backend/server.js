@@ -2,8 +2,11 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const { GoogleGenAI } = require("@google/genai");
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const JWT_SECRET = process.env.JWT_SECRET || "gamepulse_jwt_secret_2024";
 
 const app = express();
 app.use((req, res, next) => {
@@ -16,6 +19,21 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json());
+
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ success: false, message: "Требуется авторизация" });
+  }
+  jwt.verify(token, JWT_SECRET, (err, payload) => {
+    if (err) {
+      return res.status(403).json({ success: false, message: "Токен недействителен или истёк" });
+    }
+    req.user = payload;
+    next();
+  });
+}
 
 mongoose
   .connect("mongodb://localhost:27017/gamepulse", {
@@ -42,6 +60,14 @@ const UserSchema = new mongoose.Schema({
     storage: String,
     os: String,
   },
+  checkHistory: [
+    {
+      game: String,
+      fps: Number,
+      status: String,
+      checkedAt: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 async function geminiChat({ systemInstruction, history, temperature = 0.7, maxOutputTokens = 800 }) {
@@ -650,14 +676,29 @@ app.post("/login", async (req, res) => {
       return res.json({ success: false, message: "Неверный email или пароль" });
     }
 
-    res.json({ success: true, message: "Успешный вход", user });
+    const token = jwt.sign(
+      { email: user.email, userId: user._id.toString() },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      success: true,
+      message: "Успешный вход",
+      token,
+      user: {
+        username: user.username,
+        email: user.email,
+        pcSpecs: user.pcSpecs,
+      },
+    });
   } catch (err) {
     console.error("Ошибка входа:", err);
     res.json({ success: false, message: "Ошибка сервера" });
   }
 });
 
-app.post("/add-pc", async (req, res) => {
+app.post("/add-pc", authenticateToken, async (req, res) => {
   const { email, cpu, gpu, ram, storage, os } = req.body;
 
   try {
@@ -675,7 +716,7 @@ app.post("/add-pc", async (req, res) => {
   }
 });
 
-app.get("/user/:email", async (req, res) => {
+app.get("/user/:email", authenticateToken, async (req, res) => {
   try {
     const user = await User.findOne({ email: req.params.email });
     if (!user)
@@ -692,7 +733,7 @@ app.get("/user/:email", async (req, res) => {
   }
 });
 
-app.post("/check-game-compatibility", async (req, res) => {
+app.post("/check-game-compatibility", authenticateToken, async (req, res) => {
   const { email, gameTitle } = req.body;
 
   try {
@@ -713,6 +754,19 @@ app.post("/check-game-compatibility", async (req, res) => {
     }
 
     const compatibility = checkCompatibility(user.pcSpecs, gameRequirements, gameTitle);
+
+    // Save to check history (keep last 20 entries)
+    user.checkHistory.unshift({
+      game: gameTitle,
+      fps: compatibility.estimatedFPS,
+      status: compatibility.status,
+      checkedAt: new Date(),
+    });
+    if (user.checkHistory.length > 20) {
+      user.checkHistory = user.checkHistory.slice(0, 20);
+    }
+    await user.save();
+
     res.json({
       success: true,
       compatibility,
@@ -729,7 +783,14 @@ app.post("/check-game-compatibility", async (req, res) => {
 });
 
 app.post("/forgot-password", async (req, res) => {
-  const { email } = req.body;
+  const { email, newPassword } = req.body;
+
+  if (!newPassword || newPassword.length < 8) {
+    return res.status(400).json({
+      success: false,
+      message: "Новый пароль должен содержать минимум 8 символов",
+    });
+  }
 
   try {
     const user = await User.findOne({ email });
@@ -740,37 +801,24 @@ app.post("/forgot-password", async (req, res) => {
       });
     }
 
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let newPassword = '';
-
-    newPassword += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)];
-    newPassword += '!@#$%^&*'[Math.floor(Math.random() * 8)];
-
-    for (let i = 0; i < 6; i++) {
-      newPassword += characters[Math.floor(Math.random() * characters.length)];
-    }
-
-    newPassword = newPassword.split('').sort(() => Math.random() - 0.5).join('');
-
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
 
     res.json({
       success: true,
-      message: "Новый пароль создан",
-      newPassword: newPassword,
+      message: "Пароль успешно изменён. Войдите с новым паролем.",
     });
   } catch (err) {
     console.error("Ошибка восстановления пароля:", err);
     res.status(500).json({
       success: false,
-      message: "Ошибка сервера"
+      message: "Ошибка сервера",
     });
   }
 });
 
-app.post("/upgrade-recommendations", async (req, res) => {
+app.post("/upgrade-recommendations", authenticateToken, async (req, res) => {
   const { email, gameTitle, budget = "medium" } = req.body;
 
   try {
@@ -926,7 +974,7 @@ app.post("/upgrade-recommendations", async (req, res) => {
   }
 });
 
-app.post("/ai-upgrade-explanation", async (req, res) => {
+app.post("/ai-upgrade-explanation", authenticateToken, async (req, res) => {
   const { email, gameTitle, recommendation, userQuestion, messages = [] } = req.body;
 
   try {
@@ -1022,7 +1070,7 @@ app.post("/ai-upgrade-explanation", async (req, res) => {
 
 });
 
-app.post("/performance-graph", async (req, res) => {
+app.post("/performance-graph", authenticateToken, async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -1059,7 +1107,7 @@ app.post("/performance-graph", async (req, res) => {
   }
 });
 
-app.post("/ai-game-recommendations", async (req, res) => {
+app.post("/ai-game-recommendations", authenticateToken, async (req, res) => {
   const { email, preferences } = req.body;
 
   try {
@@ -1142,7 +1190,7 @@ app.post("/ai-game-recommendations", async (req, res) => {
   }
 });
 
-app.post("/ai-generate-game-character", async (req, res) => {
+app.post("/ai-generate-game-character", authenticateToken, async (req, res) => {
   const { email, gameTitle, characterType } = req.body;
 
   try {
@@ -1195,7 +1243,7 @@ app.post("/ai-generate-game-character", async (req, res) => {
   }
 });
 
-app.post("/ai-smart-upgrade-recommendations", async (req, res) => {
+app.post("/ai-smart-upgrade-recommendations", authenticateToken, async (req, res) => {
   const { email, gameTitle, budget = 500, targetFPS = 60 } = req.body;
 
   try {
@@ -1418,6 +1466,13 @@ git push -u origin main
       totalCost: 0
     });
   }
+});
+
+// ==================== PUBLIC GAMES LIST ====================
+
+app.get("/games", (req, res) => {
+  const games = Object.keys(gamesDatabase).map((title) => ({ title }));
+  res.json({ success: true, games });
 });
 
 // ==================== ADMIN ENDPOINTS ====================
