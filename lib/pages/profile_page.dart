@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'add_pc_page.dart';
 import '../utils/session_manager.dart';
+import '../utils/api_config.dart';
 import 'login_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -56,7 +57,7 @@ class _ProfilePageState extends State<ProfilePage>
 
     try {
       final token = await SessionManager.getAuthToken() ?? '';
-      final url = Uri.parse('http://localhost:3001/user/${widget.userEmail}');
+      final url = Uri.parse('${ApiConfig.baseUrl}/user/${widget.userEmail}');
       final response = await http.get(
         url,
         headers: {'Authorization': 'Bearer $token'},
@@ -120,6 +121,224 @@ class _ProfilePageState extends State<ProfilePage>
       case 'insufficient': return Colors.red;
       default: return Colors.grey;
     }
+  }
+
+  // ── Edit username dialog ───────────────────────────────────────────────────
+  void _showEditUsernameDialog() {
+    final ctrl = TextEditingController(text: userData?['username'] ?? '');
+    bool saving = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF1A1A2E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.edit, color: Color(0xFF6C63FF), size: 24),
+              SizedBox(width: 10),
+              Text('Изменить имя',
+                  style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700)),
+            ],
+          ),
+          content: _dialogTextField(ctrl, 'Новое имя пользователя', Icons.person_outline),
+          actions: [
+            TextButton(
+              onPressed: saving ? null : () => Navigator.pop(ctx),
+              child: Text('Отмена', style: TextStyle(color: Colors.white.withOpacity(0.6))),
+            ),
+            ElevatedButton(
+              onPressed: saving
+                  ? null
+                  : () async {
+                      final newName = ctrl.text.trim();
+                      if (newName.isEmpty) return;
+                      setDialogState(() => saving = true);
+                      try {
+                        final token = await SessionManager.getAuthToken() ?? '';
+                        final resp = await http.post(
+                          Uri.parse('${ApiConfig.baseUrl}/update-profile'),
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer $token',
+                          },
+                          body: jsonEncode({
+                            'email': widget.userEmail,
+                            'username': newName,
+                          }),
+                        );
+                        if (!mounted) return;
+                        final data = jsonDecode(resp.body);
+                        if (data['success'] == true) {
+                          Navigator.pop(ctx);
+                          await fetchUserData();
+                          _showSnackBar('Имя успешно изменено', const Color(0xFF4CAF50));
+                        } else {
+                          _showSnackBar(data['message'] ?? 'Ошибка', Colors.red);
+                        }
+                      } catch (e) {
+                        _showSnackBar('Ошибка соединения', Colors.red);
+                      } finally {
+                        setDialogState(() => saving = false);
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6C63FF),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: saving
+                  ? const SizedBox(
+                      width: 16, height: 16,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Сохранить', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Change password dialog ─────────────────────────────────────────────────
+  void _showChangePasswordDialog() {
+    final oldPassCtrl = TextEditingController();
+    final newPassCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController();
+    bool saving = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF1A1A2E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.lock_outline, color: Color(0xFF6C63FF), size: 24),
+              SizedBox(width: 10),
+              Text('Смена пароля',
+                  style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _dialogTextField(oldPassCtrl, 'Текущий пароль', Icons.lock_outline, obscure: true),
+              const SizedBox(height: 10),
+              _dialogTextField(newPassCtrl, 'Новый пароль', Icons.lock_reset, obscure: true),
+              const SizedBox(height: 10),
+              _dialogTextField(confirmCtrl, 'Подтвердите пароль', Icons.lock_reset, obscure: true),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: saving ? null : () => Navigator.pop(ctx),
+              child: Text('Отмена', style: TextStyle(color: Colors.white.withOpacity(0.6))),
+            ),
+            ElevatedButton(
+              onPressed: saving
+                  ? null
+                  : () async {
+                      final oldPass = oldPassCtrl.text;
+                      final newPass = newPassCtrl.text;
+                      final confirm = confirmCtrl.text;
+
+                      if (oldPass.isEmpty || newPass.isEmpty) {
+                        _showSnackBar('Заполните все поля', Colors.orange);
+                        return;
+                      }
+                      if (newPass.length < 8) {
+                        _showSnackBar('Пароль минимум 8 символов', Colors.orange);
+                        return;
+                      }
+                      if (newPass != confirm) {
+                        _showSnackBar('Пароли не совпадают', Colors.red);
+                        return;
+                      }
+
+                      setDialogState(() => saving = true);
+                      try {
+                        final token = await SessionManager.getAuthToken() ?? '';
+                        final resp = await http.post(
+                          Uri.parse('${ApiConfig.baseUrl}/change-password'),
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer $token',
+                          },
+                          body: jsonEncode({
+                            'email': widget.userEmail,
+                            'oldPassword': oldPass,
+                            'newPassword': newPass,
+                          }),
+                        );
+                        if (!mounted) return;
+                        final data = jsonDecode(resp.body);
+                        if (data['success'] == true) {
+                          Navigator.pop(ctx);
+                          _showSnackBar('Пароль успешно изменён', const Color(0xFF4CAF50));
+                        } else {
+                          _showSnackBar(data['message'] ?? 'Ошибка', Colors.red);
+                        }
+                      } catch (e) {
+                        _showSnackBar('Ошибка соединения', Colors.red);
+                      } finally {
+                        setDialogState(() => saving = false);
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6C63FF),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: saving
+                  ? const SizedBox(
+                      width: 16, height: 16,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Изменить', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _dialogTextField(
+    TextEditingController ctrl,
+    String hint,
+    IconData icon, {
+    bool obscure = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D0D1E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: TextField(
+        controller: ctrl,
+        obscureText: obscure,
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: const Color(0xFF6C63FF), size: 20),
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
+      ),
+    );
+  }
+
+  void _showSnackBar(String message, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   void logout() {
@@ -270,6 +489,57 @@ class _ProfilePageState extends State<ProfilePage>
 
                         Column(
                           children: [
+                            // Edit username
+                            SizedBox(
+                              width: double.infinity,
+                              height: 54,
+                              child: ElevatedButton.icon(
+                                onPressed: _showEditUsernameDialog,
+                                icon: const Icon(Icons.person_outline, size: 20),
+                                label: const Text(
+                                  "Изменить имя",
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF6C63FF).withOpacity(0.8),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16)),
+                                  elevation: 0,
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Change password
+                            SizedBox(
+                              width: double.infinity,
+                              height: 54,
+                              child: ElevatedButton.icon(
+                                onPressed: _showChangePasswordDialog,
+                                icon: const Icon(Icons.lock_outline, size: 20),
+                                label: const Text(
+                                  "Сменить пароль",
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1A1A2E),
+                                  foregroundColor: const Color(0xFF6C63FF),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    side: BorderSide(
+                                      color: const Color(0xFF6C63FF).withOpacity(0.5),
+                                    ),
+                                  ),
+                                  elevation: 0,
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Edit PC
                            SizedBox(
   width: double.infinity,
   height: 54,
@@ -281,7 +551,7 @@ class _ProfilePageState extends State<ProfilePage>
           builder: (_) => AddPcPage(userEmail: widget.userEmail),
         ),
       );
-      
+
       if (result == true && mounted) {
         await fetchUserData();
       }

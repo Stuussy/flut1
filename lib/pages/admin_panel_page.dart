@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../utils/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'admin_add_game_page.dart';
@@ -16,7 +17,7 @@ class AdminPanelPage extends StatefulWidget {
 }
 
 class _AdminPanelPageState extends State<AdminPanelPage> {
-  static const String _baseUrl = 'http://localhost:3001';
+  static String get _baseUrl => ApiConfig.baseUrl;
 
   int _selectedTab = 0;
   List<dynamic> _games = [];

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'admin_panel_page.dart';
@@ -56,7 +57,7 @@ class _AdminLoginPageState extends State<AdminLoginPage>
     setState(() => _isLoading = true);
 
     try {
-      final url = Uri.parse('http://localhost:3001/admin/login');
+      final url = Uri.parse('${ApiConfig.baseUrl}/admin/login');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

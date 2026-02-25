@@ -5,6 +5,7 @@ import 'register_page.dart';
 import 'main_page.dart';
 import 'admin_login_page.dart';
 import '../utils/session_manager.dart';
+import '../utils/api_config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -71,7 +72,7 @@ class _LoginPageState extends State<LoginPage>
     setState(() => _isLoading = true);
 
     try {
-      final url = Uri.parse('http://localhost:3001/login');
+      final url = Uri.parse('${ApiConfig.baseUrl}/login');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -200,7 +201,7 @@ class _LoginPageState extends State<LoginPage>
 
                           try {
                             final url =
-                                Uri.parse('http://localhost:3001/forgot-password');
+                                Uri.parse('${ApiConfig.baseUrl}/forgot-password');
                             final response = await http.post(
                               url,
                               headers: {'Content-Type': 'application/json'},

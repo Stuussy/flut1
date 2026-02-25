@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math' as math;
 import '../utils/session_manager.dart';
+import '../utils/api_config.dart';
 
 class PerformanceGraphPage extends StatefulWidget {
   final String userEmail;
@@ -22,6 +23,8 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
   late Animation<double> _fadeAnimation;
   
   List<Map<String, dynamic>> performanceData = [];
+  List<Map<String, dynamic>> _filteredData = [];
+  String? _activeFilter; // null = all, or 'excellent'/'good'/'playable'/'insufficient'
   Map<String, dynamic>? userPC;
   bool isLoading = true;
 
@@ -50,7 +53,7 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
   Future<void> loadPerformanceData() async {
     try {
       final token = await SessionManager.getAuthToken() ?? '';
-      final url = Uri.parse('http://localhost:3001/performance-graph');
+      final url = Uri.parse('${ApiConfig.baseUrl}/performance-graph');
       final response = await http.post(
         url,
         headers: {
@@ -67,6 +70,7 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
         if (data['success']) {
           setState(() {
             performanceData = List<Map<String, dynamic>>.from(data['performanceData']);
+            _filteredData = performanceData;
             userPC = data['userPC'];
             isLoading = false;
           });
@@ -83,6 +87,15 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
       });
       _showSnackBar("Ошибка соединения: $e", Colors.red);
     }
+  }
+
+  void _applyFilter(String? status) {
+    setState(() {
+      _activeFilter = status;
+      _filteredData = status == null
+          ? performanceData
+          : performanceData.where((g) => g['status'] == status).toList();
+    });
   }
 
   void _showSnackBar(String message, Color color) {
@@ -274,14 +287,47 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
                                     ),
                                   ],
                                 ),
+                                const SizedBox(height: 12),
+
+                                // Filter chips
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      _buildFilterChip('Все', null, Colors.white70),
+                                      const SizedBox(width: 8),
+                                      _buildFilterChip('Отлично', 'excellent', const Color(0xFF4CAF50)),
+                                      const SizedBox(width: 8),
+                                      _buildFilterChip('Хорошо', 'good', const Color(0xFF6C63FF)),
+                                      const SizedBox(width: 8),
+                                      _buildFilterChip('Играбельно', 'playable', const Color(0xFFFFA726)),
+                                      const SizedBox(width: 8),
+                                      _buildFilterChip('Недостаточно', 'insufficient', Colors.red),
+                                    ],
+                                  ),
+                                ),
                                 const SizedBox(height: 16),
 
-                                ...performanceData.map((game) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: _buildGamePerformanceCard(game),
-                                  );
-                                }).toList(),
+                                if (_filteredData.isEmpty)
+                                  Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 24),
+                                      child: Text(
+                                        'Нет игр с таким статусом',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.4),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  ..._filteredData.map((game) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: _buildGamePerformanceCard(game),
+                                    );
+                                  }).toList(),
 
                                 const SizedBox(height: 20),
                               ],
@@ -290,6 +336,33 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
                         ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String? status, Color color) {
+    final isActive = _activeFilter == status;
+    return GestureDetector(
+      onTap: () => _applyFilter(status),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? color.withOpacity(0.2) : const Color(0xFF1A1A2E),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive ? color : Colors.white.withOpacity(0.15),
+            width: isActive ? 1.5 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive ? color : Colors.white.withOpacity(0.6),
+            fontSize: 12,
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+          ),
         ),
       ),
     );
