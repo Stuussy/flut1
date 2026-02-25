@@ -34,6 +34,9 @@ class _GameInfoPageState extends State<GameInfoPage>
   bool _hasNetworkError = false;
   String _networkErrorMsg = '';
 
+  late AnimationController _fpsController;
+  late Animation<int> _fpsAnimation;
+
   final Map<String, Map<String, dynamic>> gameThemes = {
     "Counter-Strike 2": {
       "colors": [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
@@ -109,13 +112,20 @@ class _GameInfoPageState extends State<GameInfoPage>
       curve: Curves.easeIn,
     );
     _animController.forward();
-    
+
+    _fpsController = AnimationController(
+      duration: const Duration(milliseconds: 1400),
+      vsync: this,
+    );
+    _fpsAnimation = IntTween(begin: 0, end: 0).animate(_fpsController);
+
     checkCompatibility();
   }
 
   @override
   void dispose() {
     _animController.dispose();
+    _fpsController.dispose();
     super.dispose();
   }
 
@@ -136,6 +146,7 @@ class _GameInfoPageState extends State<GameInfoPage>
             isLoading = false;
             _fromCache = true;
           });
+          _startFpsAnimation(cached['compatibility']['estimatedFPS']);
         }
         return;
       }
@@ -168,6 +179,7 @@ class _GameInfoPageState extends State<GameInfoPage>
               isLoading = false;
               _fromCache = false;
             });
+            _startFpsAnimation(data['compatibility']['estimatedFPS']);
           }
         } else {
           if (mounted) setState(() => isLoading = false);
@@ -244,6 +256,168 @@ class _GameInfoPageState extends State<GameInfoPage>
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // ─── Анимированный счётчик FPS ────────────────────────────────────────────
+  void _startFpsAnimation(int targetFps) {
+    _fpsAnimation = IntTween(begin: 0, end: targetFps).animate(
+      CurvedAnimation(parent: _fpsController, curve: Curves.easeOut),
+    );
+    _fpsController.forward(from: 0.0);
+  }
+
+  // ─── Баннер "Недостаточно" ────────────────────────────────────────────────
+  Widget _buildInsufficientBanner() {
+    final gameReqs = compatibilityData!['gameRequirements'];
+    final userPC = compatibilityData!['userPC'];
+
+    if (gameReqs == null || userPC == null) return const SizedBox.shrink();
+
+    final minReqs = gameReqs['minimum'];
+    if (minReqs == null) return const SizedBox.shrink();
+
+    // Определяем узкие места
+    final tips = <_UpgradeTip>[];
+
+    final userGpu = (userPC['gpu'] ?? '').toString().toLowerCase();
+    final minGpuRaw = minReqs['gpu'];
+    final minGpu = (minGpuRaw is List
+            ? (minGpuRaw as List).first
+            : minGpuRaw?.toString() ?? '')
+        .toString();
+
+    if (minGpu.isNotEmpty) {
+      tips.add(_UpgradeTip(
+        icon: Icons.videogame_asset_rounded,
+        label: 'Видеокарта',
+        current: userPC['gpu'] ?? 'неизвестно',
+        required: minGpu,
+        color: Colors.red,
+      ));
+    }
+
+    final userCpu = (userPC['cpu'] ?? '').toString().toLowerCase();
+    final minCpuRaw = minReqs['cpu'];
+    final minCpu = (minCpuRaw is List
+            ? (minCpuRaw as List).first
+            : minCpuRaw?.toString() ?? '')
+        .toString();
+
+    if (minCpu.isNotEmpty && !userCpu.contains('i9') && !userCpu.contains('ryzen 9')) {
+      tips.add(_UpgradeTip(
+        icon: Icons.memory_rounded,
+        label: 'Процессор',
+        current: userPC['cpu'] ?? 'неизвестно',
+        required: minCpu,
+        color: const Color(0xFFFFA726),
+      ));
+    }
+
+    final userRamStr = (userPC['ram'] ?? '').toString();
+    final minRamStr = (minReqs['ram'] ?? '').toString();
+    final userRam = int.tryParse(
+            RegExp(r'\d+').firstMatch(userRamStr)?.group(0) ?? '') ??
+        0;
+    final minRam = int.tryParse(
+            RegExp(r'\d+').firstMatch(minRamStr)?.group(0) ?? '') ??
+        0;
+    if (minRam > 0 && userRam < minRam) {
+      tips.add(_UpgradeTip(
+        icon: Icons.storage_rounded,
+        label: 'Оперативная память',
+        current: userRamStr,
+        required: minRamStr,
+        color: const Color(0xFFE91E63),
+      ));
+    }
+
+    if (tips.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.red.withOpacity(0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.build_circle_rounded,
+                  color: Colors.red, size: 18),
+              const SizedBox(width: 8),
+              const Text(
+                'Что нужно обновить',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...tips.map((t) => _buildTipRow(t)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTipRow(_UpgradeTip tip) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: tip.color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(tip.icon, color: tip.color, size: 16),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(tip.label,
+                    style: TextStyle(
+                        color: tip.color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.6), fontSize: 11),
+                    children: [
+                      TextSpan(
+                          text: 'У вас: ',
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.45))),
+                      TextSpan(text: tip.current),
+                      TextSpan(
+                          text: '  →  Минимум: ',
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.45))),
+                      TextSpan(
+                          text: tip.required,
+                          style: TextStyle(
+                              color: tip.color,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -522,6 +696,14 @@ class _GameInfoPageState extends State<GameInfoPage>
                                 children: [
                                   _buildCompactResultCard(),
 
+                                  // Баннер с конкретными рекомендациями
+                                  // прямо на странице при статусе insufficient
+                                  if (compatibilityData!['compatibility']['status'] == 'insufficient')
+                                    ...[
+                                      const SizedBox(height: 16),
+                                      _buildInsufficientBanner(),
+                                    ],
+
                                   const SizedBox(height: 16),
 
                                   _buildPCSpecsCard(),
@@ -644,12 +826,15 @@ class _GameInfoPageState extends State<GameInfoPage>
                         size: 16,
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        "$fps FPS",
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                      AnimatedBuilder(
+                        animation: _fpsController,
+                        builder: (_, __) => Text(
+                          '${_fpsAnimation.value} FPS',
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
@@ -1048,4 +1233,21 @@ class _GameInfoPageState extends State<GameInfoPage>
       ),
     );
   }
+}
+
+// Вспомогательная структура для баннера апгрейда
+class _UpgradeTip {
+  final IconData icon;
+  final String label;
+  final String current;
+  final String required;
+  final Color color;
+
+  const _UpgradeTip({
+    required this.icon,
+    required this.label,
+    required this.current,
+    required this.required,
+    required this.color,
+  });
 }
