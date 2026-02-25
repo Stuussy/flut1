@@ -24,7 +24,7 @@ class GameInfoPage extends StatefulWidget {
 }
 
 class _GameInfoPageState extends State<GameInfoPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
   
