@@ -159,18 +159,15 @@ async function seedAdmin() {
   try {
     const adminEmail = process.env.ADMIN_EMAIL || "admin@gamepulse.com";
     const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
-    const existing = await Admin.findOne({ email: adminEmail });
-    if (!existing) {
-      const hashedPassword = await bcrypt.hash(adminPassword, 10);
-      await new Admin({
-        email: adminEmail,
-        password: hashedPassword,
-        name: "Администратор",
-      }).save();
-      console.log(`✅ Админ создан: ${adminEmail}`);
-    }
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+    await Admin.findOneAndUpdate(
+      { email: adminEmail },
+      { email: adminEmail, password: hashedPassword, name: "Администратор" },
+      { upsert: true, new: true }
+    );
+    console.log(`✅ Админ синхронизирован: ${adminEmail}`);
   } catch (err) {
-    console.error("Ошибка создания админа:", err);
+    console.error("Ошибка создания/обновления админа:", err);
   }
 }
 
