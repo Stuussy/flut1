@@ -14,26 +14,29 @@ class AdminAddGamePage extends StatefulWidget {
 class _AdminAddGamePageState extends State<AdminAddGamePage> {
   static String get _baseUrl => ApiConfig.baseUrl;
 
-  final _titleController = TextEditingController();
-  bool _isLoading = false;
+  final _titleController    = TextEditingController();
+  final _imageUrlController = TextEditingController();
+  final _subtitleController = TextEditingController();
+  bool _isLoading   = false;
+  bool _aiLoading   = false;
 
   // Tier data
-  final _minCpuController = TextEditingController();
-  final _minGpuController = TextEditingController();
+  final _minCpuController  = TextEditingController();
+  final _minGpuController  = TextEditingController();
   String _minRam = '8 GB';
 
-  final _recCpuController = TextEditingController();
-  final _recGpuController = TextEditingController();
+  final _recCpuController  = TextEditingController();
+  final _recGpuController  = TextEditingController();
   String _recRam = '16 GB';
 
   final _highCpuController = TextEditingController();
   final _highGpuController = TextEditingController();
   String _highRam = '16 GB';
 
-  final List<String> _minCpus = [];
-  final List<String> _minGpus = [];
-  final List<String> _recCpus = [];
-  final List<String> _recGpus = [];
+  final List<String> _minCpus  = [];
+  final List<String> _minGpus  = [];
+  final List<String> _recCpus  = [];
+  final List<String> _recGpus  = [];
   final List<String> _highCpus = [];
   final List<String> _highGpus = [];
 
@@ -42,6 +45,8 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
   @override
   void dispose() {
     _titleController.dispose();
+    _imageUrlController.dispose();
+    _subtitleController.dispose();
     _minCpuController.dispose();
     _minGpuController.dispose();
     _recCpuController.dispose();
@@ -63,6 +68,67 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
 
   void _removeChip(List<String> list, int index) {
     setState(() => list.removeAt(index));
+  }
+
+  // ── AI auto-fill ────────────────────────────────────────────────────────────
+  Future<void> _aiFillRequirements() async {
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      _showSnackBar("Сначала введите название игры", Colors.orange);
+      return;
+    }
+    setState(() => _aiLoading = true);
+    try {
+      final resp = await http.post(
+        Uri.parse('$_baseUrl/admin/ai-fill-game'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${widget.adminToken}'},
+        body: jsonEncode({'title': title}),
+      );
+      final data = jsonDecode(resp.body);
+      if (data['success'] == true) {
+        final d = data['data'];
+        setState(() {
+          // subtitle
+          if ((d['subtitle'] as String? ?? '').isNotEmpty) {
+            _subtitleController.text = d['subtitle'];
+          }
+          // minimum
+          _minCpus
+            ..clear()
+            ..addAll((d['minimum']?['cpu'] as List? ?? []).map((e) => e.toString()));
+          _minGpus
+            ..clear()
+            ..addAll((d['minimum']?['gpu'] as List? ?? []).map((e) => e.toString()));
+          final minRam = d['minimum']?['ram'] as String? ?? '8 GB';
+          _minRam = _ramOptions.contains(minRam) ? minRam : '8 GB';
+          // recommended
+          _recCpus
+            ..clear()
+            ..addAll((d['recommended']?['cpu'] as List? ?? []).map((e) => e.toString()));
+          _recGpus
+            ..clear()
+            ..addAll((d['recommended']?['gpu'] as List? ?? []).map((e) => e.toString()));
+          final recRam = d['recommended']?['ram'] as String? ?? '16 GB';
+          _recRam = _ramOptions.contains(recRam) ? recRam : '16 GB';
+          // high
+          _highCpus
+            ..clear()
+            ..addAll((d['high']?['cpu'] as List? ?? []).map((e) => e.toString()));
+          _highGpus
+            ..clear()
+            ..addAll((d['high']?['gpu'] as List? ?? []).map((e) => e.toString()));
+          final highRam = d['high']?['ram'] as String? ?? '32 GB';
+          _highRam = _ramOptions.contains(highRam) ? highRam : '32 GB';
+        });
+        _showSnackBar("ИИ заполнил требования для «$title»!", const Color(0xFF4CAF50));
+      } else {
+        _showSnackBar(data['message'] ?? "Ошибка ИИ", Colors.red);
+      }
+    } catch (e) {
+      _showSnackBar("Ошибка подключения", Colors.red);
+    } finally {
+      if (mounted) setState(() => _aiLoading = false);
+    }
   }
 
   Future<void> _saveGame() async {
@@ -92,10 +158,12 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
         url,
         headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${widget.adminToken}'},
         body: jsonEncode({
-          'title': title,
-          'minimum': {'cpu': _minCpus, 'gpu': _minGpus, 'ram': _minRam},
-          'recommended': {'cpu': _recCpus, 'gpu': _recGpus, 'ram': _recRam},
-          'high': {'cpu': _highCpus, 'gpu': _highGpus, 'ram': _highRam},
+          'title':    title,
+          'image':    _imageUrlController.text.trim(),
+          'subtitle': _subtitleController.text.trim(),
+          'minimum':     {'cpu': _minCpus,  'gpu': _minGpus,  'ram': _minRam},
+          'recommended': {'cpu': _recCpus,  'gpu': _recGpus,  'ram': _recRam},
+          'high':        {'cpu': _highCpus, 'gpu': _highGpus, 'ram': _highRam},
         }),
       );
 
@@ -117,8 +185,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message,
-            style: const TextStyle(color: Colors.white)),
+        content: Text(message, style: const TextStyle(color: Colors.white)),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -141,12 +208,87 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ── Title ──────────────────────────────────────────
                     _buildTextField(
                       controller: _titleController,
                       hintText: "Название игры",
                       icon: Icons.games,
                     ),
+                    const SizedBox(height: 12),
+
+                    // ── AI fill button ─────────────────────────────────
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: _aiLoading ? null : _aiFillRequirements,
+                        icon: _aiLoading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : const Icon(Icons.auto_awesome, size: 20),
+                        label: Text(
+                          _aiLoading ? "ИИ заполняет..." : "Заполнить требования автоматически (ИИ)",
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6C63FF),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ── Image URL ──────────────────────────────────────
+                    _buildTextField(
+                      controller: _imageUrlController,
+                      hintText: "URL картинки (необязательно)",
+                      icon: Icons.image,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // ── Image preview ──────────────────────────────────
+                    ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _imageUrlController,
+                      builder: (_, val, __) {
+                        final url = val.text.trim();
+                        if (url.isEmpty) return const SizedBox.shrink();
+                        return Container(
+                          height: 120,
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: Image.network(
+                            url,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: const Color(0xFF1A1A2E),
+                              child: const Center(
+                                child: Icon(Icons.broken_image, color: Colors.white38, size: 40),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                    // ── Subtitle ───────────────────────────────────────
+                    _buildTextField(
+                      controller: _subtitleController,
+                      hintText: "Жанр / описание (необязательно)",
+                      icon: Icons.label_outline,
+                    ),
                     const SizedBox(height: 24),
+
+                    // ── Tiers ──────────────────────────────────────────
                     _buildTierSection(
                       "Минимальные требования",
                       Icons.speed,
@@ -192,20 +334,17 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2),
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                               )
                             : const Icon(Icons.save, size: 20),
                         label: Text(
                           _isLoading ? "Сохранение..." : "Сохранить игру",
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4CAF50),
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           elevation: 0,
                         ),
                       ),
@@ -237,8 +376,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios,
-                color: Colors.white, size: 20),
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 8),
@@ -246,10 +384,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
           const SizedBox(width: 12),
           const Text(
             "Добавить игру",
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w700),
+            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -275,11 +410,9 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: const Color(0xFFFFA726), size: 20),
           hintText: hintText,
-          hintStyle: TextStyle(
-              color: Colors.white.withValues(alpha: 0.4), fontSize: 15),
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 15),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         ),
       ),
     );
@@ -310,29 +443,20 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
             children: [
               Icon(icon, color: color, size: 20),
               const SizedBox(width: 10),
-              Text(
-                title,
-                style: TextStyle(
-                    color: color, fontSize: 16, fontWeight: FontWeight.w700),
-              ),
+              Text(title,
+                  style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 16),
-          // CPU
           _buildChipInput("CPU", cpuController, cpuList, Icons.memory, color),
           const SizedBox(height: 12),
-          // GPU
-          _buildChipInput(
-              "GPU", gpuController, gpuList, Icons.videogame_asset, color),
+          _buildChipInput("GPU", gpuController, gpuList, Icons.videogame_asset, color),
           const SizedBox(height: 12),
-          // RAM
           Row(
             children: [
               Icon(Icons.storage, color: color.withValues(alpha: 0.7), size: 18),
               const SizedBox(width: 8),
-              Text("RAM:",
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7), fontSize: 14)),
+              Text("RAM:", style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14)),
               const SizedBox(width: 12),
               Expanded(
                 child: Container(
@@ -340,23 +464,16 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF0D0D1E),
                     borderRadius: BorderRadius.circular(12),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   child: DropdownButton<String>(
                     value: ramValue,
                     isExpanded: true,
                     dropdownColor: const Color(0xFF1A1A2E),
                     underline: const SizedBox(),
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 14),
-                    items: _ramOptions
-                        .map((r) => DropdownMenuItem(
-                            value: r, child: Text(r)))
-                        .toList(),
-                    onChanged: (val) {
-                      if (val != null) onRamChanged(val);
-                    },
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    items: _ramOptions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+                    onChanged: (val) { if (val != null) onRamChanged(val); },
                   ),
                 ),
               ),
@@ -381,9 +498,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
           children: [
             Icon(icon, color: color.withValues(alpha: 0.7), size: 18),
             const SizedBox(width: 8),
-            Text("$label:",
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7), fontSize: 14)),
+            Text("$label:", style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14)),
           ],
         ),
         const SizedBox(height: 8),
@@ -395,21 +510,16 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF0D0D1E),
                   borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                 ),
                 child: TextField(
                   controller: controller,
-                  style: const TextStyle(
-                      color: Colors.white, fontSize: 14),
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: "Например: Intel i5-12400",
-                    hintStyle: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        fontSize: 13),
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 13),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                   ),
                   onSubmitted: (_) => _addChip(controller, chips),
                 ),
@@ -424,8 +534,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color.withValues(alpha: 0.2),
                   foregroundColor: color,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: EdgeInsets.zero,
                   elevation: 0,
                 ),
@@ -443,8 +552,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
               chips.length,
               (index) => Chip(
                 label: Text(chips[index],
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 12)),
+                    style: const TextStyle(color: Colors.white, fontSize: 12)),
                 backgroundColor: color.withValues(alpha: 0.15),
                 side: BorderSide(color: color.withValues(alpha: 0.3)),
                 deleteIconColor: color,
