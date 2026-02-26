@@ -198,14 +198,14 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
                             children: [
                               Icon(
                                 Icons.computer_outlined,
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                                 size: 64,
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 "Добавьте характеристики ПК",
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
+                                  color: Colors.white.withValues(alpha: 0.6),
                                   fontSize: 16,
                                 ),
                               ),
@@ -239,7 +239,7 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
                                             Container(
                                               padding: const EdgeInsets.all(12),
                                               decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(0.2),
+                                                color: Colors.white.withValues(alpha: 0.2),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               child: const Icon(
@@ -323,7 +323,7 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
                                       child: Text(
                                         'Нет игр с таким статусом',
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.4),
+                                          color: Colors.white.withValues(alpha: 0.4),
                                           fontSize: 14,
                                         ),
                                       ),
@@ -357,17 +357,17 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? color.withOpacity(0.2) : const Color(0xFF1A1A2E),
+          color: isActive ? color.withValues(alpha: 0.2) : const Color(0xFF1A1A2E),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isActive ? color : Colors.white.withOpacity(0.15),
+            color: isActive ? color : Colors.white.withValues(alpha: 0.15),
             width: isActive ? 1.5 : 1,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isActive ? color : Colors.white.withOpacity(0.6),
+            color: isActive ? color : Colors.white.withValues(alpha: 0.6),
             fontSize: 12,
             fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
           ),
@@ -384,7 +384,7 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
         Text(
           "$label:",
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: 13,
           ),
         ),
@@ -418,7 +418,7 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: statusColor.withOpacity(0.2),
+          color: statusColor.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -429,7 +429,7 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.15),
+                  color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -468,7 +468,7 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.15),
+                  color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -491,7 +491,7 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
                 child: Container(
                   height: 8,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: FractionallySizedBox(
@@ -502,7 +502,7 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
                         gradient: LinearGradient(
                           colors: [
                             statusColor,
-                            statusColor.withOpacity(0.6),
+                            statusColor.withValues(alpha: 0.6),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(4),
@@ -515,7 +515,7 @@ class _PerformanceGraphPageState extends State<PerformanceGraphPage>
               Text(
                 "${(fpsPercentage * 100).toInt()}%",
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),

@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../utils/session_manager.dart';
 import '../utils/api_config.dart';
+import '../utils/app_colors.dart';
 
 // ─── Единый список железа (единственное место для изменений) ────────────────
 
@@ -169,7 +170,10 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
       final response =
           await http.get(url, headers: {'Authorization': 'Bearer $token'});
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 401) {
+        if (mounted) await SessionManager.handleUnauthorized(context);
+        return;
+      } else if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['user']['pcSpecs'] != null) {
           final pc = data['user']['pcSpecs'];
@@ -240,6 +244,7 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
     required bool isManual,
     required void Function(String?) onChanged,
   }) {
+    final ac = AppColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -248,12 +253,12 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
           children: [
             Row(
               children: [
-                Icon(icon, color: const Color(0xFF6C63FF), size: 18),
+                Icon(icon, color: AppColors.purple, size: 18),
                 const SizedBox(width: 8),
                 Text(
                   label,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: ac.text,
                       fontWeight: FontWeight.w600,
                       fontSize: 14),
                 ),
@@ -266,13 +271,13 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: isManual
-                      ? const Color(0xFF6C63FF).withOpacity(0.2)
-                      : Colors.white.withOpacity(0.07),
+                      ? AppColors.purple.withValues(alpha: 0.2)
+                      : ac.text.withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isManual
-                        ? const Color(0xFF6C63FF).withOpacity(0.5)
-                        : Colors.white.withOpacity(0.1),
+                        ? AppColors.purple.withValues(alpha: 0.5)
+                        : ac.text.withValues(alpha: 0.1),
                   ),
                 ),
                 child: Row(
@@ -281,8 +286,8 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
                     Icon(
                       isManual ? Icons.list_rounded : Icons.edit_rounded,
                       color: isManual
-                          ? const Color(0xFF6C63FF)
-                          : Colors.white.withOpacity(0.5),
+                          ? AppColors.purple
+                          : ac.textMuted,
                       size: 13,
                     ),
                     const SizedBox(width: 4),
@@ -290,8 +295,8 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
                       isManual ? 'Из списка' : 'Вручную',
                       style: TextStyle(
                         color: isManual
-                            ? const Color(0xFF6C63FF)
-                            : Colors.white.withOpacity(0.5),
+                            ? AppColors.purple
+                            : ac.textMuted,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -306,25 +311,24 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
         if (isManual)
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A2E),
+              color: ac.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: const Color(0xFF6C63FF).withOpacity(0.4)),
+              border: Border.all(color: AppColors.purple.withValues(alpha: 0.4)),
             ),
             child: TextField(
               enabled: !_isSaving,
               controller: _ctrlFor(fieldKey),
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: ac.text, fontSize: 14),
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16, vertical: 14),
                 border: InputBorder.none,
                 hintText: 'Введите $label вручную',
                 hintStyle: TextStyle(
-                    color: Colors.white.withOpacity(0.35), fontSize: 13),
+                    color: ac.textHint, fontSize: 13),
                 suffixIcon: value != null && value.isNotEmpty
                     ? Icon(Icons.check_circle,
-                        color: const Color(0xFF4CAF50).withOpacity(0.8),
+                        color: const Color(0xFF4CAF50).withValues(alpha: 0.8),
                         size: 18)
                     : null,
               ),
@@ -334,31 +338,29 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
         else
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A2E),
+              color: ac.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: ac.inputBorder),
             ),
             child: DropdownButtonFormField<String>(
-              dropdownColor: const Color(0xFF1A1A2E),
+              dropdownColor: ac.card,
               value: (value != null && items.contains(value)) ? value : null,
               isExpanded: true,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: ac.text, fontSize: 14),
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16, vertical: 14),
                 border: InputBorder.none,
                 hintText: 'Выберите $label',
-                hintStyle: TextStyle(
-                    color: Colors.white.withOpacity(0.4), fontSize: 14),
+                hintStyle: TextStyle(color: ac.textHint, fontSize: 14),
               ),
               icon: const Icon(Icons.arrow_drop_down,
-                  color: Color(0xFF6C63FF)),
+                  color: AppColors.purple),
               onChanged: onChanged,
               items: items
                   .map((e) => DropdownMenuItem(
                       value: e,
-                      child: Text(e,
-                          style: const TextStyle(color: Colors.white))))
+                      child: Text(e)))
                   .toList(),
             ),
           ),
@@ -406,9 +408,13 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
 
       if (!mounted) return;
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 401) {
+        await SessionManager.handleUnauthorized(context);
+        return;
+      } else if (response.statusCode == 200) {
         _showSnackBar(
             'Характеристики ПК успешно обновлены!', const Color(0xFF4CAF50));
+        SessionManager.pcChangeCount.value++;
 
         if (widget.showBackButton) {
           // Страничный режим — возвращаемся назад
@@ -490,17 +496,18 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
     List<String> items,
     void Function(String?) onChanged,
   ) {
+    final ac = AppColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, color: const Color(0xFF6C63FF), size: 18),
+            Icon(icon, color: AppColors.purple, size: 18),
             const SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: ac.text,
                   fontWeight: FontWeight.w600,
                   fontSize: 14),
             ),
@@ -509,29 +516,28 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A2E),
+            color: ac.card,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: ac.inputBorder),
           ),
           child: DropdownButtonFormField<String>(
-            dropdownColor: const Color(0xFF1A1A2E),
+            dropdownColor: ac.card,
             value: value,
             isExpanded: true,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: ac.text, fontSize: 14),
             decoration: InputDecoration(
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               border: InputBorder.none,
               hintText: 'Выберите $label',
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+              hintStyle: TextStyle(color: ac.textHint),
             ),
-            icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF6C63FF)),
+            icon: const Icon(Icons.arrow_drop_down, color: AppColors.purple),
             onChanged: onChanged,
             items: items
                 .map((e) => DropdownMenuItem(
                     value: e,
-                    child: Text(e,
-                        style: const TextStyle(color: Colors.white))))
+                    child: Text(e)))
                 .toList(),
           ),
         ),
@@ -541,8 +547,9 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
 
   @override
   Widget build(BuildContext context) {
+    final ac = AppColors.of(context);
     final scaffold = Scaffold(
-      backgroundColor: const Color(0xFF0D0D1E),
+      backgroundColor: ac.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -553,8 +560,8 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
                 children: [
                   if (widget.showBackButton) ...[
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios,
-                          color: Colors.white, size: 20),
+                      icon: Icon(Icons.arrow_back_ios,
+                          color: ac.text, size: 20),
                       onPressed:
                           _isSaving ? null : () => Navigator.pop(context),
                     ),
@@ -563,10 +570,10 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Мой ПК',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: ac.text,
                             fontSize: 20,
                             fontWeight: FontWeight.w700),
                       ),
@@ -574,7 +581,7 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
                       Text(
                         'Введите характеристики вашего компьютера',
                         style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
+                            color: ac.textMuted,
                             fontSize: 12),
                       ),
                     ],
@@ -653,7 +660,7 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
                               borderRadius: BorderRadius.circular(16)),
                           elevation: 0,
                           disabledBackgroundColor:
-                              const Color(0xFF6C63FF).withOpacity(0.5),
+                              AppColors.purple.withValues(alpha: 0.5),
                         ),
                         child: _isLoading
                             ? const SizedBox(

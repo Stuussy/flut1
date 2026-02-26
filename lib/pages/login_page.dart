@@ -148,7 +148,7 @@ class _LoginPageState extends State<LoginPage>
                   Text(
                     "Введите email и придумайте новый пароль",
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 14,
                     ),
                   ),
@@ -170,7 +170,7 @@ class _LoginPageState extends State<LoginPage>
                   child: Text(
                     "Отмена",
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 14,
                     ),
                   ),
@@ -277,7 +277,7 @@ class _LoginPageState extends State<LoginPage>
       decoration: BoxDecoration(
         color: const Color(0xFF0D0D1E),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: TextField(
         controller: ctrl,
@@ -287,7 +287,7 @@ class _LoginPageState extends State<LoginPage>
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: const Color(0xFF6C63FF), size: 20),
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14),
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 14),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -346,7 +346,7 @@ class _LoginPageState extends State<LoginPage>
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6C63FF).withOpacity(0.15),
+                      color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Icon(
@@ -373,7 +373,7 @@ class _LoginPageState extends State<LoginPage>
                   Text(
                     "Добро пожаловать!",
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 16,
                     ),
                   ),
@@ -441,7 +441,7 @@ class _LoginPageState extends State<LoginPage>
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 0,
-                        disabledBackgroundColor: const Color(0xFF6C63FF).withOpacity(0.5),
+                        disabledBackgroundColor: const Color(0xFF6C63FF).withValues(alpha: 0.5),
                       ),
                       child: _isLoading
                           ? const SizedBox(
@@ -475,7 +475,7 @@ class _LoginPageState extends State<LoginPage>
                       text: TextSpan(
                         text: "Нет аккаунта? ",
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 14,
                         ),
                         children: const [
@@ -504,13 +504,13 @@ class _LoginPageState extends State<LoginPage>
                       ),
                       icon: Icon(
                         Icons.admin_panel_settings,
-                        color: Colors.white.withOpacity(0.4),
+                        color: Colors.white.withValues(alpha: 0.4),
                         size: 18,
                       ),
                       label: Text(
                         "Вход для администратора",
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                           fontSize: 13,
                         ),
                       ),
@@ -538,7 +538,7 @@ class _LoginPageState extends State<LoginPage>
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1.5,
         ),
       ),
@@ -556,7 +556,7 @@ class _LoginPageState extends State<LoginPage>
           suffixIcon: suffixIcon,
           hintText: hintText,
           hintStyle: TextStyle(
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
             fontSize: 15,
           ),
           border: InputBorder.none,

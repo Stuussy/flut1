@@ -227,7 +227,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
         color: const Color(0xFF1A1A2E),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -265,7 +265,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: TextField(
         controller: controller,
@@ -275,7 +275,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
           prefixIcon: Icon(icon, color: const Color(0xFFFFA726), size: 20),
           hintText: hintText,
           hintStyle: TextStyle(
-              color: Colors.white.withOpacity(0.4), fontSize: 15),
+              color: Colors.white.withValues(alpha: 0.4), fontSize: 15),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -300,7 +300,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,11 +327,11 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
           // RAM
           Row(
             children: [
-              Icon(Icons.storage, color: color.withOpacity(0.7), size: 18),
+              Icon(Icons.storage, color: color.withValues(alpha: 0.7), size: 18),
               const SizedBox(width: 8),
               Text("RAM:",
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.7), fontSize: 14)),
+                      color: Colors.white.withValues(alpha: 0.7), fontSize: 14)),
               const SizedBox(width: 12),
               Expanded(
                 child: Container(
@@ -340,7 +340,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
                     color: const Color(0xFF0D0D1E),
                     borderRadius: BorderRadius.circular(12),
                     border:
-                        Border.all(color: Colors.white.withOpacity(0.1)),
+                        Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   child: DropdownButton<String>(
                     value: ramValue,
@@ -378,11 +378,11 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
       children: [
         Row(
           children: [
-            Icon(icon, color: color.withOpacity(0.7), size: 18),
+            Icon(icon, color: color.withValues(alpha: 0.7), size: 18),
             const SizedBox(width: 8),
             Text("$label:",
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.7), fontSize: 14)),
+                    color: Colors.white.withValues(alpha: 0.7), fontSize: 14)),
           ],
         ),
         const SizedBox(height: 8),
@@ -395,7 +395,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
                   color: const Color(0xFF0D0D1E),
                   borderRadius: BorderRadius.circular(12),
                   border:
-                      Border.all(color: Colors.white.withOpacity(0.1)),
+                      Border.all(color: Colors.white.withValues(alpha: 0.1)),
                 ),
                 child: TextField(
                   controller: controller,
@@ -404,7 +404,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
                   decoration: InputDecoration(
                     hintText: "Например: Intel i5-12400",
                     hintStyle: TextStyle(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         fontSize: 13),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
@@ -421,7 +421,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
               child: ElevatedButton(
                 onPressed: () => _addChip(controller, chips),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: color.withOpacity(0.2),
+                  backgroundColor: color.withValues(alpha: 0.2),
                   foregroundColor: color,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
@@ -444,8 +444,8 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
                 label: Text(chips[index],
                     style: const TextStyle(
                         color: Colors.white, fontSize: 12)),
-                backgroundColor: color.withOpacity(0.15),
-                side: BorderSide(color: color.withOpacity(0.3)),
+                backgroundColor: color.withValues(alpha: 0.15),
+                side: BorderSide(color: color.withValues(alpha: 0.3)),
                 deleteIconColor: color,
                 onDeleted: () => _removeChip(chips, index),
               ),

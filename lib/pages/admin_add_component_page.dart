@@ -240,7 +240,7 @@ class _AdminAddComponentPageState extends State<AdminAddComponentPage> {
         color: const Color(0xFF1A1A2E),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -295,7 +295,7 @@ class _AdminAddComponentPageState extends State<AdminAddComponentPage> {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: TextField(
         controller: controller,
@@ -306,7 +306,7 @@ class _AdminAddComponentPageState extends State<AdminAddComponentPage> {
               Icon(icon, color: const Color(0xFFFFA726), size: 20),
           hintText: hintText,
           hintStyle: TextStyle(
-              color: Colors.white.withOpacity(0.4), fontSize: 14),
+              color: Colors.white.withValues(alpha: 0.4), fontSize: 14),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -320,7 +320,7 @@ class _AdminAddComponentPageState extends State<AdminAddComponentPage> {
       children: _typeOptions.map((option) {
         final isSelected = _selectedType == option['value'];
         final color =
-            isSelected ? const Color(0xFFFFA726) : Colors.white.withOpacity(0.4);
+            isSelected ? const Color(0xFFFFA726) : Colors.white.withValues(alpha: 0.4);
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -332,13 +332,13 @@ class _AdminAddComponentPageState extends State<AdminAddComponentPage> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFFFFA726).withOpacity(0.1)
+                    ? const Color(0xFFFFA726).withValues(alpha: 0.1)
                     : const Color(0xFF1A1A2E),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected
-                      ? const Color(0xFFFFA726).withOpacity(0.5)
-                      : Colors.white.withOpacity(0.1),
+                      ? const Color(0xFFFFA726).withValues(alpha: 0.5)
+                      : Colors.white.withValues(alpha: 0.1),
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -349,7 +349,7 @@ class _AdminAddComponentPageState extends State<AdminAddComponentPage> {
                   Text(
                     option['label'] as String,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+                      color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
                       fontSize: 15,
                       fontWeight:
                           isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -387,13 +387,13 @@ class _AdminAddComponentPageState extends State<AdminAddComponentPage> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? color.withOpacity(0.2)
+                      ? color.withValues(alpha: 0.2)
                       : const Color(0xFF1A1A2E),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected
                         ? color
-                        : Colors.white.withOpacity(0.1),
+                        : Colors.white.withValues(alpha: 0.1),
                     width: isSelected ? 2 : 1,
                   ),
                 ),
@@ -401,7 +401,7 @@ class _AdminAddComponentPageState extends State<AdminAddComponentPage> {
                   child: Text(
                     option['label'] as String,
                     style: TextStyle(
-                      color: isSelected ? color : Colors.white.withOpacity(0.6),
+                      color: isSelected ? color : Colors.white.withValues(alpha: 0.6),
                       fontSize: 14,
                       fontWeight:
                           isSelected ? FontWeight.w700 : FontWeight.w400,

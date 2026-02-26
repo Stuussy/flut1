@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'home_page.dart';
 import 'add_pc_page.dart';
 import 'profile_page.dart';
+import '../utils/app_colors.dart';
 
 class MainPage extends StatefulWidget {
   final String userEmail;
@@ -69,8 +70,9 @@ class _MainPageState extends State<MainPage> {
       ),
     ];
 
+    final ac = AppColors.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1E),
+      backgroundColor: ac.bg,
       extendBody: true,
       body: IndexedStack(
         index: _selectedIndex,
@@ -79,10 +81,10 @@ class _MainPageState extends State<MainPage> {
 
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E),
+          color: ac.card,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),
@@ -125,6 +127,7 @@ class _MainPageState extends State<MainPage> {
     required int index,
   }) {
     final isSelected = _selectedIndex == index;
+    final ac = AppColors.of(context);
 
     return Expanded(
       child: InkWell(
@@ -134,7 +137,7 @@ class _MainPageState extends State<MainPage> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFF6C63FF).withOpacity(0.15)
+                ? AppColors.purple.withValues(alpha: 0.15)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -144,8 +147,8 @@ class _MainPageState extends State<MainPage> {
               Icon(
                 icon,
                 color: isSelected
-                    ? const Color(0xFF6C63FF)
-                    : Colors.white.withOpacity(0.4),
+                    ? AppColors.purple
+                    : ac.textMuted,
                 size: 24,
               ),
               const SizedBox(height: 4),
@@ -153,8 +156,8 @@ class _MainPageState extends State<MainPage> {
                 label,
                 style: TextStyle(
                   color: isSelected
-                      ? const Color(0xFF6C63FF)
-                      : Colors.white.withOpacity(0.4),
+                      ? AppColors.purple
+                      : ac.textMuted,
                   fontSize: 11,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 ),
@@ -230,11 +233,12 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final ac = AppColors.of(context);
     return Container(
       height: MediaQuery.of(context).size.height * 0.65,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1A1A2E),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: ac.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         children: [
@@ -244,7 +248,7 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: ac.text.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -272,8 +276,8 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(4),
                   color: active
-                      ? const Color(0xFF6C63FF)
-                      : Colors.white.withOpacity(0.25),
+                      ? AppColors.purple
+                      : ac.text.withValues(alpha: 0.25),
                 ),
               );
             }),
@@ -292,8 +296,8 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
                           duration: const Duration(milliseconds: 350),
                           curve: Curves.easeInOut),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white70,
-                        side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                        foregroundColor: ac.textSecondary,
+                        side: BorderSide(color: ac.text.withValues(alpha: 0.2)),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -331,6 +335,7 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
   }
 
   Widget _buildStep(_OnboardingStep step) {
+    final ac = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
       child: Column(
@@ -340,7 +345,7 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: step.color.withOpacity(0.15),
+              color: step.color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(step.icon, color: step.color, size: 50),
@@ -349,8 +354,8 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
           Text(
             step.title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: ac.text,
               fontSize: 20,
               fontWeight: FontWeight.w700,
             ),
@@ -360,7 +365,7 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
             step.body,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
+              color: ac.textSecondary,
               fontSize: 14,
               height: 1.5,
             ),

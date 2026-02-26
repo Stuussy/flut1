@@ -6,6 +6,7 @@ import 'upgrade_recommendations_page.dart';
 import '../utils/session_manager.dart';
 import '../utils/api_config.dart';
 import '../utils/cache_manager.dart';
+import '../utils/app_colors.dart';
 
 class GameInfoPage extends StatefulWidget {
   final String title;
@@ -167,7 +168,10 @@ class _GameInfoPageState extends State<GameInfoPage>
         }),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 401) {
+        if (mounted) await SessionManager.handleUnauthorized(context);
+        return;
+      } else if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
           // Save to cache
@@ -339,9 +343,9 @@ class _GameInfoPageState extends State<GameInfoPage>
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.08),
+        color: Colors.red.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red.withOpacity(0.35)),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,7 +380,7 @@ class _GameInfoPageState extends State<GameInfoPage>
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: tip.color.withOpacity(0.15),
+              color: tip.color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(tip.icon, color: tip.color, size: 16),
@@ -395,17 +399,17 @@ class _GameInfoPageState extends State<GameInfoPage>
                 RichText(
                   text: TextSpan(
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.6), fontSize: 11),
+                        color: Colors.white.withValues(alpha: 0.6), fontSize: 11),
                     children: [
                       TextSpan(
                           text: 'У вас: ',
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.45))),
+                              color: Colors.white.withValues(alpha: 0.45))),
                       TextSpan(text: tip.current),
                       TextSpan(
                           text: '  →  Минимум: ',
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.45))),
+                              color: Colors.white.withValues(alpha: 0.45))),
                       TextSpan(
                           text: tip.required,
                           style: TextStyle(
@@ -424,12 +428,13 @@ class _GameInfoPageState extends State<GameInfoPage>
 
   // ─── Placeholder для загрузки изображения ────────────────────────────────
   Widget _buildImagePlaceholder() {
+    final ac = AppColors.of(context);
     return Container(
-      color: const Color(0xFF1A1A2E),
+      color: ac.card,
       child: Center(
         child: Icon(
           Icons.videogame_asset_outlined,
-          color: Colors.white.withOpacity(0.12),
+          color: ac.text.withValues(alpha: 0.12),
           size: 40,
         ),
       ),
@@ -488,8 +493,9 @@ class _GameInfoPageState extends State<GameInfoPage>
       "icon": Icons.games,
     };
 
+    final ac = AppColors.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1E),
+      backgroundColor: ac.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -527,7 +533,7 @@ class _GameInfoPageState extends State<GameInfoPage>
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            const Color(0xFF0D0D1E),
+                            ac.bg,
                           ],
                         ),
                       ),
@@ -539,7 +545,7 @@ class _GameInfoPageState extends State<GameInfoPage>
                     left: 16,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: IconButton(
@@ -557,7 +563,7 @@ class _GameInfoPageState extends State<GameInfoPage>
                       right: 16,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
@@ -588,7 +594,7 @@ class _GameInfoPageState extends State<GameInfoPage>
                         Text(
                           "Проверка совместимости",
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 14,
                           ),
                         ),
@@ -617,7 +623,7 @@ class _GameInfoPageState extends State<GameInfoPage>
                                 Container(
                                   padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.1),
+                                    color: Colors.red.withValues(alpha: 0.1),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(Icons.wifi_off_rounded,
@@ -636,7 +642,7 @@ class _GameInfoPageState extends State<GameInfoPage>
                                   _networkErrorMsg,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                      color: Colors.white.withOpacity(0.5),
+                                      color: Colors.white.withValues(alpha: 0.5),
                                       fontSize: 14),
                                 ),
                                 const SizedBox(height: 28),
@@ -668,14 +674,14 @@ class _GameInfoPageState extends State<GameInfoPage>
                             children: [
                               Icon(
                                 Icons.error_outline,
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                                 size: 64,
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 "Сначала добавьте характеристики ПК",
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
+                                  color: Colors.white.withValues(alpha: 0.6),
                                   fontSize: 16,
                                 ),
                               ),
@@ -745,12 +751,12 @@ class _GameInfoPageState extends State<GameInfoPage>
             child: Row(
               children: [
                 Icon(Icons.cached,
-                    color: Colors.white.withOpacity(0.45), size: 14),
+                    color: Colors.white.withValues(alpha: 0.45), size: 14),
                 const SizedBox(width: 6),
                 Text(
                   'Кэшировано · потяните вниз для обновления',
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.45), fontSize: 11),
+                      color: Colors.white.withValues(alpha: 0.45), fontSize: 11),
                 ),
               ],
             ),
@@ -760,13 +766,13 @@ class _GameInfoPageState extends State<GameInfoPage>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            statusColor.withOpacity(0.15),
-            statusColor.withOpacity(0.05),
+            statusColor.withValues(alpha: 0.15),
+            statusColor.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: statusColor.withOpacity(0.3),
+          color: statusColor.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
@@ -775,7 +781,7 @@ class _GameInfoPageState extends State<GameInfoPage>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.15),
+              color: statusColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
@@ -803,7 +809,7 @@ class _GameInfoPageState extends State<GameInfoPage>
                 Text(
                   compatibility['message'],
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 13,
                   ),
                 ),
@@ -811,10 +817,10 @@ class _GameInfoPageState extends State<GameInfoPage>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.2),
+                    color: statusColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: statusColor.withOpacity(0.3),
+                      color: statusColor.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -861,7 +867,7 @@ class _GameInfoPageState extends State<GameInfoPage>
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: statusColor.withOpacity(0.3),
+          color: statusColor.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -885,7 +891,7 @@ class _GameInfoPageState extends State<GameInfoPage>
             compatibility['message'],
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               fontSize: 14,
             ),
           ),
@@ -917,7 +923,7 @@ class _GameInfoPageState extends State<GameInfoPage>
               Text(
                 "Ожидаемый FPS",
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 14,
                 ),
               ),
@@ -935,7 +941,7 @@ class _GameInfoPageState extends State<GameInfoPage>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -950,6 +956,7 @@ class _GameInfoPageState extends State<GameInfoPage>
   }
 
   Widget _buildGameRequirementsCard() {
+    final ac = AppColors.of(context);
     final gameReqs = compatibilityData!['gameRequirements'];
 
     if (gameReqs == null) {
@@ -959,11 +966,9 @@ class _GameInfoPageState extends State<GameInfoPage>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: ac.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-        ),
+        border: Border.all(color: ac.inputBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -972,10 +977,10 @@ class _GameInfoPageState extends State<GameInfoPage>
             children: [
               const Icon(Icons.list_alt, color: Color(0xFF6C63FF), size: 20),
               const SizedBox(width: 10),
-              const Text(
+              Text(
                 "Требования игры",
                 style: TextStyle(
-                  color: Colors.white,
+                  color: ac.text,
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1042,14 +1047,13 @@ class _GameInfoPageState extends State<GameInfoPage>
   }
 
   Widget _buildSmallChip(String label, String value, IconData icon) {
+    final ac = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: ac.text.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-        ),
+        border: Border.all(color: ac.inputBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1059,7 +1063,7 @@ class _GameInfoPageState extends State<GameInfoPage>
           Text(
             "$label: ",
             style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
+              color: ac.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
@@ -1067,8 +1071,8 @@ class _GameInfoPageState extends State<GameInfoPage>
           Flexible(
             child: Text(
               value,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: ac.text,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -1124,28 +1128,27 @@ class _GameInfoPageState extends State<GameInfoPage>
   }
 
   Widget _buildPCSpecsCard() {
+    final ac = AppColors.of(context);
     final userPC = compatibilityData!['userPC'];
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: ac.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-        ),
+        border: Border.all(color: ac.inputBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.computer, color: Color(0xFF6C63FF), size: 20),
-              SizedBox(width: 10),
+              const Icon(Icons.computer, color: Color(0xFF6C63FF), size: 20),
+              const SizedBox(width: 10),
               Text(
                 "Ваш ПК",
                 style: TextStyle(
-                  color: Colors.white,
+                  color: ac.text,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1172,6 +1175,7 @@ class _GameInfoPageState extends State<GameInfoPage>
   }
 
   Widget _buildSpecRow(IconData icon, String label, String value) {
+    final ac = AppColors.of(context);
     return Row(
       children: [
         Icon(icon, color: const Color(0xFF6C63FF), size: 18),
@@ -1179,7 +1183,7 @@ class _GameInfoPageState extends State<GameInfoPage>
         Text(
           "$label:",
           style: TextStyle(
-            color: Colors.white.withOpacity(0.6),
+            color: ac.textSecondary,
             fontSize: 13,
           ),
         ),
@@ -1187,8 +1191,8 @@ class _GameInfoPageState extends State<GameInfoPage>
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: ac.text,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),

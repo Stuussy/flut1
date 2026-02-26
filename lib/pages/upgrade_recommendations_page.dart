@@ -260,14 +260,14 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                             children: [
                               Icon(
                                 Icons.error_outline,
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                                 size: 64,
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 "Не удалось загрузить рекомендации",
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
+                                  color: Colors.white.withValues(alpha: 0.6),
                                   fontSize: 16,
                                 ),
                               ),
@@ -287,7 +287,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                                     color: const Color(0xFF1A1A2E),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.1),
+                                      color: Colors.white.withValues(alpha: 0.1),
                                     ),
                                   ),
                                   child: Column(
@@ -352,10 +352,10 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF6C63FF).withOpacity(0.1),
+                                    color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: const Color(0xFF6C63FF).withOpacity(0.3),
+                                      color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
                                     ),
                                   ),
                                   child: Row(
@@ -400,7 +400,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                                             Text(
                                               "Общая стоимость",
                                               style: TextStyle(
-                                                color: Colors.white.withOpacity(0.9),
+                                                color: Colors.white.withValues(alpha: 0.9),
                                                 fontSize: 14,
                                               ),
                                             ),
@@ -418,7 +418,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                                         Container(
                                           padding: const EdgeInsets.all(16),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.2),
+                                            color: Colors.white.withValues(alpha: 0.2),
                                             borderRadius: BorderRadius.circular(16),
                                           ),
                                           child: const Icon(
@@ -488,7 +488,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                                         Container(
                                           padding: const EdgeInsets.all(24),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF4CAF50).withOpacity(0.1),
+                                            color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(20),
                                           ),
                                           child: const Icon(
@@ -510,7 +510,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                                         Text(
                                           "Для игры ${widget.gameTitle}",
                                           style: TextStyle(
-                                            color: Colors.white.withOpacity(0.6),
+                                            color: Colors.white.withValues(alpha: 0.6),
                                             fontSize: 14,
                                           ),
                                         ),
@@ -538,12 +538,12 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF9C27B0).withOpacity(0.15),
-            const Color(0xFF6C63FF).withOpacity(0.15),
+            const Color(0xFF9C27B0).withValues(alpha: 0.15),
+            const Color(0xFF6C63FF).withValues(alpha: 0.15),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF9C27B0).withOpacity(0.4)),
+        border: Border.all(color: const Color(0xFF9C27B0).withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,7 +573,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                 Text(
                   widget.gameTitle,
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.8), fontSize: 12),
+                      color: Colors.white.withValues(alpha: 0.8), fontSize: 12),
                 ),
               ],
             ),
@@ -589,9 +589,9 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red.withOpacity(0.3)),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -622,7 +622,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                         Text(
                           analysis['bottleneckReason'] ?? '',
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.75),
+                              color: Colors.white.withValues(alpha: 0.75),
                               fontSize: 12),
                         ),
                       ],
@@ -643,13 +643,13 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       analysis['overallAssessment'] ?? '',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.8), fontSize: 12),
+                          color: Colors.white.withValues(alpha: 0.8), fontSize: 12),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -674,7 +674,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                       decoration: BoxDecoration(
                         color: const Color(0xFF1A1A2E),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: pColor.withOpacity(0.3)),
+                        border: Border.all(color: pColor.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -685,7 +685,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: pColor.withOpacity(0.15),
+                                  color: pColor.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -721,7 +721,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                             Text(
                               rec['reason'] ?? '',
                               style: TextStyle(
-                                  color: Colors.white.withOpacity(0.65),
+                                  color: Colors.white.withValues(alpha: 0.65),
                                   fontSize: 11),
                             ),
                           ],
@@ -791,7 +791,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
         Expanded(
           child: Text(
             text,
-            style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 12),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 12),
           ),
         ),
       ],
@@ -811,10 +811,10 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
+          color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? color : Colors.white.withOpacity(0.1),
+            color: isSelected ? color : Colors.white.withValues(alpha: 0.1),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -822,14 +822,14 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
           children: [
             Icon(
               icon,
-              color: isSelected ? color : Colors.white.withOpacity(0.4),
+              color: isSelected ? color : Colors.white.withValues(alpha: 0.4),
               size: 24,
             ),
             const SizedBox(height: 6),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? color : Colors.white.withOpacity(0.6),
+                color: isSelected ? color : Colors.white.withValues(alpha: 0.6),
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
               ),
@@ -849,7 +849,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: priorityColor.withOpacity(0.3),
+          color: priorityColor.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -861,7 +861,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: priorityColor.withOpacity(0.15),
+                  color: priorityColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -908,7 +908,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF6C63FF).withOpacity(0.15),
+                    color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Row(
@@ -939,7 +939,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -949,7 +949,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                 Text(
                   "Сейчас:",
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withValues(alpha: 0.5),
                     fontSize: 12,
                   ),
                 ),
@@ -973,7 +973,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50).withOpacity(0.1),
+              color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -983,7 +983,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                 Text(
                   "Улучшить на:",
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withValues(alpha: 0.5),
                     fontSize: 12,
                   ),
                 ),
@@ -1013,7 +1013,7 @@ class _UpgradeRecommendationsPageState extends State<UpgradeRecommendationsPage>
                   Text(
                     "Цена",
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 12,
                     ),
                   ),

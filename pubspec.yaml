@@ -20,9 +20,6 @@ dependencies:
   # Shared Preferences для сохранения сессии
   shared_preferences: ^2.2.2
 
-  # YouTube player
-  youtube_player_flutter: ^9.0.3
-
   # UI Components
   carousel_slider: ^4.2.1
   animated_text_kit: ^4.2.2

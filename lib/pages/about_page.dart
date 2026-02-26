@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/app_colors.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -8,21 +9,20 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
-  static const _purple = Color(0xFF6C63FF);
-  static const _card = Color(0xFF1A1A2E);
-  static const _bg = Color(0xFF0D0D1E);
+  static const _purple = AppColors.purple;
 
   // Развёрнутые FAQ-пункты
   final Set<int> _expanded = {};
 
   @override
   Widget build(BuildContext context) {
+    final ac = AppColors.of(context);
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ac.bg,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(ac),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -33,28 +33,32 @@ class _AboutPageState extends State<AboutPage> {
                       icon: Icons.calculate_rounded,
                       color: _purple,
                       title: 'Как рассчитывается FPS',
-                      child: _buildFpsMethodology(),
+                      child: _buildFpsMethodology(ac),
+                      ac: ac,
                     ),
                     const SizedBox(height: 20),
                     _buildSection(
                       icon: Icons.signal_cellular_alt_rounded,
                       color: const Color(0xFF4CAF50),
                       title: 'Статусы совместимости',
-                      child: _buildStatusLegend(),
+                      child: _buildStatusLegend(ac),
+                      ac: ac,
                     ),
                     const SizedBox(height: 20),
                     _buildSection(
                       icon: Icons.help_outline_rounded,
                       color: const Color(0xFFFFB300),
                       title: 'Частые вопросы (FAQ)',
-                      child: _buildFaq(),
+                      child: _buildFaq(ac),
+                      ac: ac,
                     ),
                     const SizedBox(height: 20),
                     _buildSection(
                       icon: Icons.info_outline_rounded,
                       color: const Color(0xFF00BCD4),
                       title: 'О GamePulse',
-                      child: _buildAboutBlock(),
+                      child: _buildAboutBlock(ac),
+                      ac: ac,
                     ),
                     const SizedBox(height: 8),
                   ],
@@ -68,14 +72,14 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   // ─── Header ───────────────────────────────────────────────────────────────
-  Widget _buildHeader() {
+  Widget _buildHeader(AppColors ac) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: _card,
+        color: ac.card,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -84,15 +88,15 @@ class _AboutPageState extends State<AboutPage> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new,
-                color: Colors.white, size: 20),
+            icon: Icon(Icons.arrow_back_ios_new,
+                color: ac.text, size: 20),
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 8),
-          const Text(
+          Text(
             'О приложении',
             style: TextStyle(
-                color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                color: ac.text, fontSize: 18, fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -105,6 +109,7 @@ class _AboutPageState extends State<AboutPage> {
     required Color color,
     required String title,
     required Widget child,
+    required AppColors ac,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,8 +120,8 @@ class _AboutPageState extends State<AboutPage> {
             const SizedBox(width: 10),
             Text(
               title,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: ac.text,
                   fontSize: 16,
                   fontWeight: FontWeight.w700),
             ),
@@ -126,9 +131,9 @@ class _AboutPageState extends State<AboutPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: _card,
+            color: ac.card,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.07)),
+            border: Border.all(color: ac.subtleBorder),
           ),
           padding: const EdgeInsets.all(16),
           child: child,
@@ -138,7 +143,7 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   // ─── FPS Methodology ─────────────────────────────────────────────────────
-  Widget _buildFpsMethodology() {
+  Widget _buildFpsMethodology(AppColors ac) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -148,6 +153,7 @@ class _AboutPageState extends State<AboutPage> {
           'Ваш CPU и GPU сравниваются с официальными минимальными и '
               'рекомендуемыми требованиями игры по балльной шкале.',
           const Color(0xFF6C63FF),
+          ac,
         ),
         const SizedBox(height: 12),
         _methodStep(
@@ -156,6 +162,7 @@ class _AboutPageState extends State<AboutPage> {
           'На основе мощности вашего GPU вычисляется базовый FPS. '
               'Например, RTX 4090 даёт ~180+ FPS в 1080p для большинства игр.',
           const Color(0xFF4CAF50),
+          ac,
         ),
         const SizedBox(height: 12),
         _methodStep(
@@ -164,6 +171,7 @@ class _AboutPageState extends State<AboutPage> {
           'Если процессор или ОЗУ ниже рекомендуемых — FPS снижается '
               'пропорционально. Узкие места определяются автоматически.',
           const Color(0xFFFF9800),
+          ac,
         ),
         const SizedBox(height: 12),
         _methodStep(
@@ -172,14 +180,15 @@ class _AboutPageState extends State<AboutPage> {
           'FPS округляется до 5 и присваивается статус: Отлично (≥80), '
               'Хорошо (60–79), Играбельно (30–59), Недостаточно (<30).',
           const Color(0xFFE91E63),
+          ac,
         ),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: _purple.withOpacity(0.1),
+            color: _purple.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: _purple.withOpacity(0.2)),
+            border: Border.all(color: _purple.withValues(alpha: 0.2)),
           ),
           child: Row(
             children: [
@@ -190,7 +199,7 @@ class _AboutPageState extends State<AboutPage> {
                   'Расчёт — это прогноз. Реальный FPS зависит от '
                   'настроек игры, разрешения, фоновых процессов.',
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: ac.textSecondary,
                       fontSize: 12,
                       height: 1.4),
                 ),
@@ -203,7 +212,7 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   Widget _methodStep(
-      String num, String title, String body, Color color) {
+      String num, String title, String body, Color color, AppColors ac) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -224,14 +233,14 @@ class _AboutPageState extends State<AboutPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: ac.text,
                       fontWeight: FontWeight.w600,
                       fontSize: 13)),
               const SizedBox(height: 3),
               Text(body,
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: ac.textSecondary,
                       fontSize: 12,
                       height: 1.4)),
             ],
@@ -242,7 +251,7 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   // ─── Status legend ────────────────────────────────────────────────────────
-  Widget _buildStatusLegend() {
+  Widget _buildStatusLegend(AppColors ac) {
     const statuses = [
       (
         'Отлично',
@@ -285,7 +294,7 @@ class _AboutPageState extends State<AboutPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -307,7 +316,7 @@ class _AboutPageState extends State<AboutPage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 7, vertical: 2),
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.15),
+                            color: color.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(fps,
@@ -321,7 +330,7 @@ class _AboutPageState extends State<AboutPage> {
                     const SizedBox(height: 3),
                     Text(desc,
                         style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
+                            color: ac.textSecondary,
                             fontSize: 12,
                             height: 1.4)),
                   ],
@@ -335,7 +344,7 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   // ─── FAQ ──────────────────────────────────────────────────────────────────
-  Widget _buildFaq() {
+  Widget _buildFaq(AppColors ac) {
     const items = [
       (
         'Почему FPS отличается от реального?',
@@ -386,8 +395,8 @@ class _AboutPageState extends State<AboutPage> {
                   children: [
                     Expanded(
                       child: Text(q,
-                          style: const TextStyle(
-                              color: Colors.white,
+                          style: TextStyle(
+                              color: ac.text,
                               fontWeight: FontWeight.w600,
                               fontSize: 13)),
                     ),
@@ -395,7 +404,7 @@ class _AboutPageState extends State<AboutPage> {
                       isOpen
                           ? Icons.keyboard_arrow_up_rounded
                           : Icons.keyboard_arrow_down_rounded,
-                      color: Colors.white.withOpacity(0.5),
+                      color: ac.textMuted,
                     ),
                   ],
                 ),
@@ -406,7 +415,7 @@ class _AboutPageState extends State<AboutPage> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(a,
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: ac.textSecondary,
                         fontSize: 12,
                         height: 1.5)),
               ),
@@ -414,7 +423,7 @@ class _AboutPageState extends State<AboutPage> {
             if (i < items.length - 1)
               Divider(
                   height: 1,
-                  color: Colors.white.withOpacity(0.07),
+                  color: ac.divider,
                   thickness: 1),
           ],
         );
@@ -423,7 +432,7 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   // ─── About block ──────────────────────────────────────────────────────────
-  Widget _buildAboutBlock() {
+  Widget _buildAboutBlock(AppColors ac) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -432,24 +441,23 @@ class _AboutPageState extends State<AboutPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _purple.withOpacity(0.15),
+                color: _purple.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: const Icon(Icons.games, color: _purple, size: 28),
             ),
             const SizedBox(width: 16),
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('GamePulse',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: ac.text,
                         fontSize: 18,
                         fontWeight: FontWeight.w700)),
-                SizedBox(height: 2),
-                Text('Версия 1.0.0',
-                    style:
-                        TextStyle(color: Color(0xFF6C63FF), fontSize: 13)),
+                const SizedBox(height: 2),
+                const Text('Версия 1.0.0',
+                    style: TextStyle(color: Color(0xFF6C63FF), fontSize: 13)),
               ],
             ),
           ],
@@ -461,7 +469,7 @@ class _AboutPageState extends State<AboutPage> {
           'узнайте ожидаемый FPS и статус для любой игры из каталога. '
           'Встроенный ИИ подберёт оптимальные варианты апгрейда под ваш бюджет.',
           style: TextStyle(
-              color: Colors.white.withOpacity(0.65),
+              color: ac.textSecondary,
               fontSize: 13,
               height: 1.5),
         ),
