@@ -1012,41 +1012,6 @@ class _UpgradeRecommendationsPageState
                           fontSize: 10,
                           fontWeight: FontWeight.w700)),
                 ),
-                const SizedBox(width: 8),
-                // AI chat chip
-                GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AiChatPage(
-                        userEmail: widget.userEmail,
-                        gameTitle: widget.gameTitle,
-                        recommendation: rec,
-                      ),
-                    ),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _purple.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.smart_toy_rounded,
-                            color: _purple, size: 13),
-                        SizedBox(width: 3),
-                        Text('AI',
-                            style: TextStyle(
-                                color: _purple,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700)),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -1184,6 +1149,87 @@ class _UpgradeRecommendationsPageState
                         ),
                       ),
                   ],
+                ),
+
+                const SizedBox(height: 14),
+
+                // ── AI chat button ────────────────────────────────────────
+                InkWell(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AiChatPage(
+                        userEmail: widget.userEmail,
+                        gameTitle: widget.gameTitle,
+                        recommendation: rec,
+                      ),
+                    ),
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 13),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          _purple.withValues(alpha: 0.10),
+                          _violet.withValues(alpha: 0.05),
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: _purple.withValues(alpha: 0.28)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _purple.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.smart_toy_rounded,
+                            color: _purple,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Спросить ИИ о компоненте',
+                                style: TextStyle(
+                                  color: _purple,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Задайте вопрос ИИ-ассистенту об этом апгрейде',
+                                style: TextStyle(
+                                  color: Color(0xFF9B95E8),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: _purple.withValues(alpha: 0.55),
+                          size: 14,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
