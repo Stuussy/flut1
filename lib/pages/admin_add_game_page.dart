@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class AdminAddGamePage extends StatefulWidget {
-  const AdminAddGamePage({super.key});
+  final String adminToken;
+  const AdminAddGamePage({super.key, this.adminToken = ''});
 
   @override
   State<AdminAddGamePage> createState() => _AdminAddGamePageState();
@@ -89,7 +90,7 @@ class _AdminAddGamePageState extends State<AdminAddGamePage> {
       final url = Uri.parse('$_baseUrl/admin/add-game');
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${widget.adminToken}'},
         body: jsonEncode({
           'title': title,
           'minimum': {'cpu': _minCpus, 'gpu': _minGpus, 'ram': _minRam},

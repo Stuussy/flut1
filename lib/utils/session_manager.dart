@@ -9,6 +9,7 @@ class SessionManager {
   static final ValueNotifier<int> pcChangeCount = ValueNotifier(0);
   static const String _keyIsLoggedIn = 'is_logged_in';
   static const String _keyAuthToken = 'auth_token';
+  static const String _keyAdminToken = 'admin_token';
 
   static Future<void> saveUserSession(String email, String token) async {
     final prefs = await SharedPreferences.getInstance();
@@ -30,6 +31,21 @@ class SessionManager {
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyIsLoggedIn) ?? false;
+  }
+
+  static Future<void> saveAdminToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyAdminToken, token);
+  }
+
+  static Future<String?> getAdminToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyAdminToken);
+  }
+
+  static Future<void> clearAdminToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyAdminToken);
   }
 
   static Future<void> logout() async {

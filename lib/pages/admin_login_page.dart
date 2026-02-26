@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/api_config.dart';
+import '../utils/session_manager.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'admin_panel_page.dart';
@@ -67,13 +68,15 @@ class _AdminLoginPageState extends State<AdminLoginPage>
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
+          final token = data['token'] as String? ?? '';
+          await SessionManager.saveAdminToken(token);
           _showSnackBar("Добро пожаловать!", const Color(0xFF4CAF50));
           await Future.delayed(const Duration(milliseconds: 500));
           if (mounted) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) => AdminPanelPage(adminEmail: email),
+                builder: (_) => AdminPanelPage(adminEmail: email, adminToken: token),
               ),
             );
           }

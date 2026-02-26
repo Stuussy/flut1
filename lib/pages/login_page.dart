@@ -342,17 +342,25 @@ class _LoginPageState extends State<LoginPage>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
+                  GestureDetector(
+                    onLongPress: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AdminLoginPage(),
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.games_rounded,
-                      color: Color(0xFF6C63FF),
-                      size: 40,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(
+                        Icons.games_rounded,
+                        color: Color(0xFF6C63FF),
+                        size: 40,
+                      ),
                     ),
                   ),
                   
@@ -491,31 +499,6 @@ class _LoginPageState extends State<LoginPage>
                     ),
                   ),
 
-                  const SizedBox(height: 16),
-
-                  SizedBox(
-                    height: 48,
-                    child: TextButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AdminLoginPage(),
-                        ),
-                      ),
-                      icon: Icon(
-                        Icons.admin_panel_settings,
-                        color: Colors.white.withValues(alpha: 0.4),
-                        size: 18,
-                      ),
-                      label: Text(
-                        "Вход для администратора",
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
