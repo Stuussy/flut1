@@ -259,87 +259,161 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     } catch (_) { _snack("Ошибка", _red); }
   }
 
+  // ── ai fill game (used in edit dialog) ────────────────────────────────────
+  Future<Map<String, dynamic>?> _aiFillGame(String title) async {
+    try {
+      final r = await http.post(Uri.parse('$_base/admin/ai-fill-game'),
+          headers: _authHeaders, body: jsonEncode({'title': title}));
+      final d = jsonDecode(r.body);
+      if (d['success'] == true) return d['data'] as Map<String, dynamic>;
+      _snack(d['message'] ?? "Ошибка ИИ", _red);
+    } catch (_) {
+      _snack("Ошибка соединения", _red);
+    }
+    return null;
+  }
+
   // ── edit game dialog ───────────────────────────────────────────────────────
   void _showEditGameDialog(Map<String, dynamic> game) {
-    final titleCtrl = TextEditingController(text: game['title'] ?? '');
-    final minCpuCtrl  = TextEditingController(text: (game['minimum']?['cpu'] as List?)?.join(', ') ?? '');
-    final minGpuCtrl  = TextEditingController(text: (game['minimum']?['gpu'] as List?)?.join(', ') ?? '');
-    final minRamCtrl  = TextEditingController(text: game['minimum']?['ram'] ?? '');
-    final recCpuCtrl  = TextEditingController(text: (game['recommended']?['cpu'] as List?)?.join(', ') ?? '');
-    final recGpuCtrl  = TextEditingController(text: (game['recommended']?['gpu'] as List?)?.join(', ') ?? '');
-    final recRamCtrl  = TextEditingController(text: game['recommended']?['ram'] ?? '');
-    final highCpuCtrl = TextEditingController(text: (game['high']?['cpu'] as List?)?.join(', ') ?? '');
-    final highGpuCtrl = TextEditingController(text: (game['high']?['gpu'] as List?)?.join(', ') ?? '');
-    final highRamCtrl = TextEditingController(text: game['high']?['ram'] ?? '');
+    final titleCtrl    = TextEditingController(text: game['title'] ?? '');
+    final imageCtrl    = TextEditingController(text: game['image'] ?? '');
+    final subtitleCtrl = TextEditingController(text: game['subtitle'] ?? '');
+    final minCpuCtrl   = TextEditingController(text: (game['minimum']?['cpu'] as List?)?.join(', ') ?? '');
+    final minGpuCtrl   = TextEditingController(text: (game['minimum']?['gpu'] as List?)?.join(', ') ?? '');
+    final minRamCtrl   = TextEditingController(text: game['minimum']?['ram'] ?? '');
+    final recCpuCtrl   = TextEditingController(text: (game['recommended']?['cpu'] as List?)?.join(', ') ?? '');
+    final recGpuCtrl   = TextEditingController(text: (game['recommended']?['gpu'] as List?)?.join(', ') ?? '');
+    final recRamCtrl   = TextEditingController(text: game['recommended']?['ram'] ?? '');
+    final highCpuCtrl  = TextEditingController(text: (game['high']?['cpu'] as List?)?.join(', ') ?? '');
+    final highGpuCtrl  = TextEditingController(text: (game['high']?['gpu'] as List?)?.join(', ') ?? '');
+    final highRamCtrl  = TextEditingController(text: game['high']?['ram'] ?? '');
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: _card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("Редактировать игру",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _dialogField("Название", titleCtrl),
-                const SizedBox(height: 10),
-                _tierHeader("Минимальные", _green),
-                _dialogField("CPU (через запятую)", minCpuCtrl),
-                _dialogField("GPU (через запятую)", minGpuCtrl),
-                _dialogField("RAM", minRamCtrl),
-                const SizedBox(height: 6),
-                _tierHeader("Рекомендуемые", _purp),
-                _dialogField("CPU (через запятую)", recCpuCtrl),
-                _dialogField("GPU (через запятую)", recGpuCtrl),
-                _dialogField("RAM", recRamCtrl),
-                const SizedBox(height: 6),
-                _tierHeader("Высокие", _gold),
-                _dialogField("CPU (через запятую)", highCpuCtrl),
-                _dialogField("GPU (через запятую)", highGpuCtrl),
-                _dialogField("RAM", highRamCtrl),
-              ],
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setS) {
+          bool aiLoading = false;
+
+          return AlertDialog(
+            backgroundColor: _card,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text("Редактировать игру",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _dialogField("Название", titleCtrl),
+                    _dialogField("URL картинки (необязательно)", imageCtrl),
+                    _dialogField("Жанр / описание (необязательно)", subtitleCtrl),
+                    const SizedBox(height: 8),
+                    // ── AI fill button ───────────────────────────────
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: aiLoading ? null : () async {
+                          final name = titleCtrl.text.trim();
+                          if (name.isEmpty) {
+                            _snack("Введите название игры", Colors.orange);
+                            return;
+                          }
+                          setS(() => aiLoading = true);
+                          final data = await _aiFillGame(name);
+                          setS(() => aiLoading = false);
+                          if (data == null) return;
+                          List<String> joinList(dynamic v) =>
+                              (v as List? ?? []).map((e) => e.toString()).toList();
+                          setS(() {
+                            if ((data['subtitle'] as String? ?? '').isNotEmpty) {
+                              subtitleCtrl.text = data['subtitle'];
+                            }
+                            minCpuCtrl.text  = joinList(data['minimum']?['cpu']).join(', ');
+                            minGpuCtrl.text  = joinList(data['minimum']?['gpu']).join(', ');
+                            minRamCtrl.text  = data['minimum']?['ram'] ?? '8 GB';
+                            recCpuCtrl.text  = joinList(data['recommended']?['cpu']).join(', ');
+                            recGpuCtrl.text  = joinList(data['recommended']?['gpu']).join(', ');
+                            recRamCtrl.text  = data['recommended']?['ram'] ?? '16 GB';
+                            highCpuCtrl.text = joinList(data['high']?['cpu']).join(', ');
+                            highGpuCtrl.text = joinList(data['high']?['gpu']).join(', ');
+                            highRamCtrl.text = data['high']?['ram'] ?? '32 GB';
+                          });
+                          _snack("ИИ заполнил требования!", _green);
+                        },
+                        icon: aiLoading
+                            ? const SizedBox(width: 16, height: 16,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Icon(Icons.auto_awesome, size: 18),
+                        label: Text(aiLoading ? "Загрузка..." : "Заполнить автоматически (ИИ)",
+                            style: const TextStyle(fontSize: 13)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _purp,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _tierHeader("Минимальные", _green),
+                    _dialogField("CPU (через запятую)", minCpuCtrl),
+                    _dialogField("GPU (через запятую)", minGpuCtrl),
+                    _dialogField("RAM", minRamCtrl),
+                    const SizedBox(height: 6),
+                    _tierHeader("Рекомендуемые", _purp),
+                    _dialogField("CPU (через запятую)", recCpuCtrl),
+                    _dialogField("GPU (через запятую)", recGpuCtrl),
+                    _dialogField("RAM", recRamCtrl),
+                    const SizedBox(height: 6),
+                    _tierHeader("Высокие", _gold),
+                    _dialogField("CPU (через запятую)", highCpuCtrl),
+                    _dialogField("GPU (через запятую)", highGpuCtrl),
+                    _dialogField("RAM", highRamCtrl),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Отмена", style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              List<String> splitCsv(TextEditingController c) =>
-                  c.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
-              try {
-                final r = await http.put(Uri.parse('$_base/admin/edit-game'),
-                    headers: _authHeaders,
-                    body: jsonEncode({
-                      'oldTitle': game['title'],
-                      'title': titleCtrl.text.trim(),
-                      'minimum':    {'cpu': splitCsv(minCpuCtrl),  'gpu': splitCsv(minGpuCtrl),  'ram': minRamCtrl.text.trim()},
-                      'recommended':{'cpu': splitCsv(recCpuCtrl),  'gpu': splitCsv(recGpuCtrl),  'ram': recRamCtrl.text.trim()},
-                      'high':       {'cpu': splitCsv(highCpuCtrl), 'gpu': splitCsv(highGpuCtrl), 'ram': highRamCtrl.text.trim()},
-                    }));
-                final d = jsonDecode(r.body);
-                _snack(d['success'] == true ? "Игра обновлена" : (d['message'] ?? "Ошибка"),
-                    d['success'] == true ? _green : _red);
-                if (d['success'] == true) _loadGamesComps();
-              } catch (_) { _snack("Ошибка соединения", _red); }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _purp,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text("Сохранить"),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text("Отмена", style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  List<String> splitCsv(TextEditingController c) =>
+                      c.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+                  try {
+                    final r = await http.put(Uri.parse('$_base/admin/edit-game'),
+                        headers: _authHeaders,
+                        body: jsonEncode({
+                          'oldTitle':    game['title'],
+                          'title':       titleCtrl.text.trim(),
+                          'image':       imageCtrl.text.trim(),
+                          'subtitle':    subtitleCtrl.text.trim(),
+                          'minimum':     {'cpu': splitCsv(minCpuCtrl),  'gpu': splitCsv(minGpuCtrl),  'ram': minRamCtrl.text.trim()},
+                          'recommended': {'cpu': splitCsv(recCpuCtrl),  'gpu': splitCsv(recGpuCtrl),  'ram': recRamCtrl.text.trim()},
+                          'high':        {'cpu': splitCsv(highCpuCtrl), 'gpu': splitCsv(highGpuCtrl), 'ram': highRamCtrl.text.trim()},
+                        }));
+                    final d = jsonDecode(r.body);
+                    _snack(d['success'] == true ? "Игра обновлена" : (d['message'] ?? "Ошибка"),
+                        d['success'] == true ? _green : _red);
+                    if (d['success'] == true) _loadGamesComps();
+                  } catch (_) { _snack("Ошибка соединения", _red); }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _purp,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text("Сохранить"),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -723,64 +797,97 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   }
 
   Widget _gameCard(Map<String, dynamic> game) {
-    final title  = game['title'] ?? '';
-    final sel    = _selGames.contains(title);
+    final title    = game['title'] ?? '';
+    final image    = (game['image'] as String? ?? '').trim();
+    final subtitle = (game['subtitle'] as String? ?? '').trim();
+    final sel      = _selGames.contains(title);
 
     return GestureDetector(
       onLongPress: () => setState(() { _bulkMode = true; _selGames.add(title); }),
       onTap: _bulkMode ? () => setState(() { sel ? _selGames.remove(title) : _selGames.add(title); }) : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: sel ? _purp.withValues(alpha: 0.12) : _card,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: sel ? _purp : Colors.white.withValues(alpha: 0.08)),
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                if (_bulkMode)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: Icon(sel ? Icons.check_circle_rounded : Icons.circle_outlined,
-                        color: sel ? _purp : Colors.white.withValues(alpha: 0.3), size: 20),
+            // ── image thumbnail ────────────────────────────────────────
+            if (image.isNotEmpty)
+              SizedBox(
+                height: 100,
+                width: double.infinity,
+                child: Image.network(
+                  image,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: _bg,
+                    child: const Center(child: Icon(Icons.broken_image, color: Colors.white24, size: 32)),
                   ),
-                Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(
-                    color: _purp.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.games_rounded, color: _purp, size: 18),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(title,
-                      style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
-                ),
-                if (!_bulkMode) ...[
-                  IconButton(
-                    icon: const Icon(Icons.edit_rounded, color: _gold, size: 18),
-                    onPressed: () => _showEditGameDialog(game),
-                    tooltip: "Редактировать",
+              ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if (_bulkMode)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: Icon(sel ? Icons.check_circle_rounded : Icons.circle_outlined,
+                              color: sel ? _purp : Colors.white.withValues(alpha: 0.3), size: 20),
+                        ),
+                      if (image.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          margin: const EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(
+                            color: _purp.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.games_rounded, color: _purp, size: 18),
+                        ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(title,
+                                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+                            if (subtitle.isNotEmpty)
+                              Text(subtitle,
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      if (!_bulkMode) ...[
+                        IconButton(
+                          icon: const Icon(Icons.edit_rounded, color: _gold, size: 18),
+                          onPressed: () => _showEditGameDialog(game),
+                          tooltip: "Редактировать",
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, color: _red, size: 18),
+                          onPressed: () => _deleteGame(title),
+                          tooltip: "Удалить",
+                        ),
+                      ],
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded, color: _red, size: 18),
-                    onPressed: () => _deleteGame(title),
-                    tooltip: "Удалить",
-                  ),
+                  const SizedBox(height: 10),
+                  _tierRow("Мин", game['minimum'], _green),
+                  const SizedBox(height: 4),
+                  _tierRow("Рек", game['recommended'], _purp),
+                  const SizedBox(height: 4),
+                  _tierRow("Макс", game['high'], _gold),
                 ],
-              ],
+              ),
             ),
-            const SizedBox(height: 10),
-            _tierRow("Мин", game['minimum'], _green),
-            const SizedBox(height: 4),
-            _tierRow("Рек", game['recommended'], _purp),
-            const SizedBox(height: 4),
-            _tierRow("Макс", game['high'], _gold),
           ],
         ),
       ),

@@ -139,6 +139,8 @@ const Admin = mongoose.model("Admin", AdminSchema);
 
 const CustomGameSchema = new mongoose.Schema({
   title: String,
+  image: { type: String, default: '' },
+  subtitle: { type: String, default: '' },
   minimum: { cpu: [String], gpu: [String], ram: String },
   recommended: { cpu: [String], gpu: [String], ram: String },
   high: { cpu: [String], gpu: [String], ram: String },
@@ -171,6 +173,8 @@ async function seedAdmin() {
   }
 }
 
+const gamesMeta = {}; // title -> { image, subtitle }
+
 async function loadCustomData() {
   try {
     const customGames = await CustomGame.find();
@@ -180,6 +184,9 @@ async function loadCustomData() {
         recommended: { cpu: game.recommended.cpu, gpu: game.recommended.gpu, ram: game.recommended.ram },
         high: { cpu: game.high.cpu, gpu: game.high.gpu, ram: game.high.ram },
       };
+      if (game.image || game.subtitle) {
+        gamesMeta[game.title] = { image: game.image || '', subtitle: game.subtitle || '' };
+      }
     }
     const customComponents = await CustomComponent.find();
     for (const comp of customComponents) {
@@ -1555,7 +1562,11 @@ git push -u origin main
 // ==================== PUBLIC GAMES LIST ====================
 
 app.get("/games", (req, res) => {
-  const games = Object.keys(gamesDatabase).map((title) => ({ title }));
+  const games = Object.keys(gamesDatabase).map((title) => ({
+    title,
+    image: gamesMeta[title]?.image || '',
+    subtitle: gamesMeta[title]?.subtitle || '',
+  }));
   res.json({ success: true, games });
 });
 
@@ -1587,6 +1598,8 @@ app.post("/admin/login", async (req, res) => {
 app.get("/admin/games", adminAuth, (req, res) => {
   const games = Object.entries(gamesDatabase).map(([title, data]) => ({
     title,
+    image: gamesMeta[title]?.image || '',
+    subtitle: gamesMeta[title]?.subtitle || '',
     minimum: data.minimum,
     recommended: data.recommended,
     high: data.high,
@@ -1609,15 +1622,16 @@ app.get("/admin/components", adminAuth, (req, res) => {
 });
 
 app.post("/admin/add-game", adminAuth, async (req, res) => {
-  const { title, minimum, recommended, high } = req.body;
+  const { title, minimum, recommended, high, image, subtitle } = req.body;
   if (!title || !minimum || !recommended || !high) {
     return res.status(400).json({ success: false, message: "Заполните все поля" });
   }
   try {
     gamesDatabase[title] = { minimum, recommended, high };
+    if (image || subtitle) gamesMeta[title] = { image: image || '', subtitle: subtitle || '' };
     await CustomGame.findOneAndUpdate(
       { title },
-      { title, minimum, recommended, high },
+      { title, minimum, recommended, high, image: image || '', subtitle: subtitle || '' },
       { upsert: true, new: true }
     );
     res.json({ success: true, message: `Игра "${title}" добавлена` });
@@ -1699,19 +1713,73 @@ app.post("/admin/ai-chat", adminAuth, async (req, res) => {
   }
 });
 
+// ── admin: ai fill game requirements ─────────────────────────────────────────
+app.post("/admin/ai-fill-game", adminAuth, async (req, res) => {
+  const { title } = req.body;
+  if (!title) return res.status(400).json({ success: false, message: "Укажите название игры" });
+
+  const prompt = `Ты эксперт по системным требованиям ПК-игр. Для игры "${title}" укажи РЕАЛЬНЫЕ системные требования.
+
+Верни ТОЛЬКО JSON в таком формате (без пояснений, только JSON):
+{
+  "subtitle": "Жанр игры на русском (1-3 слова)",
+  "minimum": {
+    "cpu": ["Процессор 1", "Процессор 2"],
+    "gpu": ["Видеокарта 1", "Видеокарта 2"],
+    "ram": "8 GB"
+  },
+  "recommended": {
+    "cpu": ["Процессор 1", "Процессор 2"],
+    "gpu": ["Видеокарта 1", "Видеокарта 2"],
+    "ram": "16 GB"
+  },
+  "high": {
+    "cpu": ["Процессор 1", "Процессор 2"],
+    "gpu": ["Видеокарта 1", "Видеокарта 2"],
+    "ram": "32 GB"
+  }
+}
+
+Используй реальные модели CPU/GPU (Intel i5/i7/i9, AMD Ryzen, NVIDIA GTX/RTX, AMD RX).
+RAM только: "8 GB", "16 GB", "32 GB" или "64 GB".
+Каждый массив CPU и GPU должен содержать 1-3 элемента.`;
+
+  try {
+    const responseText = await geminiChat({
+      systemInstruction: "Отвечай ТОЛЬКО в формате JSON. Никакого лишнего текста.",
+      history: [{ role: "user", content: prompt }],
+      temperature: 0.3,
+      maxOutputTokens: 600,
+    });
+
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(500).json({ success: false, message: "ИИ вернул некорректный ответ" });
+
+    const data = JSON.parse(jsonMatch[0]);
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error("Ошибка AI fill game:", err);
+    res.status(500).json({ success: false, message: "Ошибка ИИ сервиса" });
+  }
+});
+
 // ── admin: edit game ──────────────────────────────────────────────────────────
 app.put("/admin/edit-game", adminAuth, async (req, res) => {
-  const { oldTitle, title, minimum, recommended, high } = req.body;
+  const { oldTitle, title, minimum, recommended, high, image, subtitle } = req.body;
   if (!title || !minimum || !recommended || !high) {
     return res.status(400).json({ success: false, message: "Заполните все поля" });
   }
   try {
     const key = oldTitle || title;
-    if (oldTitle && oldTitle !== title) delete gamesDatabase[oldTitle];
+    if (oldTitle && oldTitle !== title) {
+      delete gamesDatabase[oldTitle];
+      delete gamesMeta[oldTitle];
+    }
     gamesDatabase[title] = { minimum, recommended, high };
+    gamesMeta[title] = { image: image || '', subtitle: subtitle || '' };
     await CustomGame.findOneAndUpdate(
       { title: key },
-      { title, minimum, recommended, high },
+      { title, minimum, recommended, high, image: image || '', subtitle: subtitle || '' },
       { upsert: true, new: true }
     );
     if (oldTitle && oldTitle !== title) await CustomGame.findOneAndDelete({ title: oldTitle });
