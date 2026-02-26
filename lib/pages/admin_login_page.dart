@@ -138,7 +138,7 @@ class _AdminLoginPageState extends State<AdminLoginPage>
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFA726).withOpacity(0.15),
+                      color: const Color(0xFFFFA726).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Icon(
@@ -160,7 +160,7 @@ class _AdminLoginPageState extends State<AdminLoginPage>
                   Text(
                     "Вход для администратора",
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 16,
                     ),
                   ),
@@ -203,7 +203,7 @@ class _AdminLoginPageState extends State<AdminLoginPage>
                         ),
                         elevation: 0,
                         disabledBackgroundColor:
-                            const Color(0xFFFFA726).withOpacity(0.5),
+                            const Color(0xFFFFA726).withValues(alpha: 0.5),
                       ),
                       child: _isLoading
                           ? const SizedBox(
@@ -227,7 +227,7 @@ class _AdminLoginPageState extends State<AdminLoginPage>
                       child: Text(
                         "Вернуться к приложению",
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 14,
                         ),
                       ),
@@ -255,7 +255,7 @@ class _AdminLoginPageState extends State<AdminLoginPage>
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border:
-            Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+            Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
       ),
       child: TextField(
         controller: controller,
@@ -268,7 +268,7 @@ class _AdminLoginPageState extends State<AdminLoginPage>
           suffixIcon: suffixIcon,
           hintText: hintText,
           hintStyle: TextStyle(
-              color: Colors.white.withOpacity(0.4), fontSize: 15),
+              color: Colors.white.withValues(alpha: 0.4), fontSize: 15),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 20, vertical: 18),

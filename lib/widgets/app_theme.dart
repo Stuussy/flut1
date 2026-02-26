@@ -30,7 +30,7 @@ class MinimalButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           elevation: 0,
-          disabledBackgroundColor: color.withOpacity(0.5),
+          disabledBackgroundColor: color.withValues(alpha: 0.5),
         ),
         child: isLoading
             ? const SizedBox(
@@ -88,7 +88,7 @@ class MinimalTextField extends StatelessWidget {
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
         ),
       ),
       child: TextField(
@@ -100,7 +100,7 @@ class MinimalTextField extends StatelessWidget {
           prefixIcon: Icon(icon, color: const Color(0xFF6C63FF), size: 20),
           suffixIcon: suffixIcon,
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 15),
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 15),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
@@ -132,7 +132,7 @@ class SimpleCard extends StatelessWidget {
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: borderColor ?? Colors.white.withOpacity(0.1),
+          color: borderColor ?? Colors.white.withValues(alpha: 0.1),
         ),
       ),
       child: child,
@@ -167,7 +167,7 @@ class InfoRow extends StatelessWidget {
         Text(
           "$label:",
           style: TextStyle(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 13,
           ),
         ),
@@ -206,10 +206,10 @@ class StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -221,7 +221,7 @@ class StatCard extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 13,
                 ),
               ),
@@ -239,7 +239,7 @@ class StatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 28),

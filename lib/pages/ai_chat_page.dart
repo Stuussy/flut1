@@ -239,7 +239,7 @@ class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateM
         color: const Color(0xFF1A1A2E),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -255,7 +255,7 @@ class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateM
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF6C63FF).withOpacity(0.15),
+              color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.smart_toy, color: Color(0xFF6C63FF), size: 24),
@@ -271,7 +271,7 @@ class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateM
                 ),
                 Text(
                   "Объяснение апгрейдов",
-                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
                 ),
               ],
             ),
@@ -279,9 +279,9 @@ class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateM
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50).withOpacity(0.15),
+              color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.3)),
+              border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
             ),
             child: const Row(
               children: [
@@ -338,8 +338,8 @@ class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateM
           padding: const EdgeInsets.only(right: 8),
           child: ActionChip(
             label: Text(_quickQuestions[index], style: const TextStyle(color: Colors.white, fontSize: 13)),
-            backgroundColor: const Color(0xFF6C63FF).withOpacity(0.15),
-            side: BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.3)),
+            backgroundColor: const Color(0xFF6C63FF).withValues(alpha: 0.15),
+            side: BorderSide(color: const Color(0xFF6C63FF).withValues(alpha: 0.3)),
             onPressed: () => _sendMessage(_quickQuestions[index]),
           ),
         ),
@@ -354,7 +354,7 @@ class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateM
         color: const Color(0xFF1A1A2E),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -367,14 +367,14 @@ class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateM
               decoration: BoxDecoration(
                 color: const Color(0xFF0D0D1E),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
               child: TextField(
                 controller: _messageController,
                 style: const TextStyle(color: Colors.white, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: "Задай свой вопрос...",
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 14),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
@@ -410,7 +410,7 @@ class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateM
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: const Color(0xFF6C63FF).withOpacity(0.15),
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(Icons.smart_toy, color: Color(0xFF6C63FF), size: 16),
@@ -428,7 +428,7 @@ class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateM
                   bottomLeft: isUser ? const Radius.circular(16) : const Radius.circular(4),
                   bottomRight: isUser ? const Radius.circular(4) : const Radius.circular(16),
                 ),
-                border: isUser ? null : Border.all(color: Colors.white.withOpacity(0.1)),
+                border: isUser ? null : Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
               child: SelectableText(
                 (message['text'] ?? '').toString(),
@@ -441,7 +441,7 @@ class _AiChatPageState extends State<AiChatPage> with SingleTickerProviderStateM
             Container(
               width: 32,
               height: 32,
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
               child: const Icon(Icons.person, color: Colors.white, size: 16),
             ),
           ],

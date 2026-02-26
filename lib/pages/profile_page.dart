@@ -9,6 +9,7 @@ import '../utils/session_manager.dart';
 import '../utils/api_config.dart';
 import '../utils/theme_manager.dart';
 import '../utils/favorites_manager.dart';
+import '../utils/app_colors.dart';
 import 'login_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -31,8 +32,6 @@ class _ProfilePageState extends State<ProfilePage>
   int _favoritesCount = 0;
 
   static const _purple  = Color(0xFF6C63FF);
-  static const _card    = Color(0xFF1A1A2E);
-  static const _bg      = Color(0xFF0D0D1E);
   static const _green   = Color(0xFF4CAF50);
   static const _amber   = Color(0xFFFFB300);
   static const _orange  = Color(0xFFFFA726);
@@ -46,12 +45,14 @@ class _ProfilePageState extends State<ProfilePage>
         CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
     _fadeController.forward();
     FavoritesManager.changeCount.addListener(_loadFavCount);
+    SessionManager.pcChangeCount.addListener(_onPCChanged);
     _loadAll();
   }
 
   @override
   void dispose() {
     FavoritesManager.changeCount.removeListener(_loadFavCount);
+    SessionManager.pcChangeCount.removeListener(_onPCChanged);
     _fadeController.dispose();
     super.dispose();
   }
@@ -59,6 +60,8 @@ class _ProfilePageState extends State<ProfilePage>
   Future<void> _loadAll() async {
     await Future.wait([fetchUserData(), _loadFavCount()]);
   }
+
+  void _onPCChanged() => fetchUserData();
 
   Future<void> _loadFavCount() async {
     final favs = await FavoritesManager.getFavorites();
@@ -74,7 +77,10 @@ class _ProfilePageState extends State<ProfilePage>
         Uri.parse('${ApiConfig.baseUrl}/user/${widget.userEmail}'),
         headers: {'Authorization': 'Bearer $token'},
       );
-      if (res.statusCode == 200) {
+      if (res.statusCode == 401) {
+        await SessionManager.handleUnauthorized(context);
+        return;
+      } else if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['success'] == true && mounted) {
           final raw = (data['user']['checkHistory'] as List<dynamic>? ?? []);
@@ -172,20 +178,22 @@ class _ProfilePageState extends State<ProfilePage>
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, set) => AlertDialog(
-          backgroundColor: _card,
+        builder: (ctx, set) {
+          final dac = AppColors.of(ctx);
+          return AlertDialog(
+          backgroundColor: dac.card,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(children: [
-            Icon(Icons.edit_rounded, color: _purple, size: 22),
-            SizedBox(width: 10),
+          title: Row(children: [
+            const Icon(Icons.edit_rounded, color: _purple, size: 22),
+            const SizedBox(width: 10),
             Text('Изменить имя',
-                style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700)),
+                style: TextStyle(color: dac.text, fontSize: 17, fontWeight: FontWeight.w700)),
           ]),
           content: _dialogField(ctrl, 'Новое имя', Icons.person_outline),
           actions: [
             TextButton(
               onPressed: saving ? null : () => Navigator.pop(ctx),
-              child: Text('Отмена', style: TextStyle(color: Colors.white.withOpacity(0.5))),
+              child: Text('Отмена', style: TextStyle(color: dac.textMuted)),
             ),
             ElevatedButton(
               onPressed: saving
@@ -205,6 +213,11 @@ class _ProfilePageState extends State<ProfilePage>
                           body: jsonEncode({'email': widget.userEmail, 'username': name}),
                         );
                         if (!mounted) return;
+                        if (r.statusCode == 401) {
+                          Navigator.pop(ctx);
+                          await SessionManager.handleUnauthorized(context);
+                          return;
+                        }
                         final d = jsonDecode(r.body);
                         if (d['success'] == true) {
                           Navigator.pop(ctx);
@@ -228,7 +241,8 @@ class _ProfilePageState extends State<ProfilePage>
                   : const Text('Сохранить', style: TextStyle(color: Colors.white)),
             ),
           ],
-        ),
+        );
+        },
       ),
     );
   }
@@ -241,14 +255,16 @@ class _ProfilePageState extends State<ProfilePage>
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, set) => AlertDialog(
-          backgroundColor: _card,
+        builder: (ctx, set) {
+          final dac = AppColors.of(ctx);
+          return AlertDialog(
+          backgroundColor: dac.card,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(children: [
-            Icon(Icons.lock_outline, color: _purple, size: 22),
-            SizedBox(width: 10),
+          title: Row(children: [
+            const Icon(Icons.lock_outline, color: _purple, size: 22),
+            const SizedBox(width: 10),
             Text('Смена пароля',
-                style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700)),
+                style: TextStyle(color: dac.text, fontSize: 17, fontWeight: FontWeight.w700)),
           ]),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             _dialogField(oldCtrl,  'Текущий пароль',    Icons.lock_outline, obscure: true),
@@ -260,7 +276,7 @@ class _ProfilePageState extends State<ProfilePage>
           actions: [
             TextButton(
               onPressed: saving ? null : () => Navigator.pop(ctx),
-              child: Text('Отмена', style: TextStyle(color: Colors.white.withOpacity(0.5))),
+              child: Text('Отмена', style: TextStyle(color: dac.textMuted)),
             ),
             ElevatedButton(
               onPressed: saving
@@ -291,6 +307,11 @@ class _ProfilePageState extends State<ProfilePage>
                           }),
                         );
                         if (!mounted) return;
+                        if (r.statusCode == 401) {
+                          Navigator.pop(ctx);
+                          await SessionManager.handleUnauthorized(context);
+                          return;
+                        }
                         final d = jsonDecode(r.body);
                         if (d['success'] == true) {
                           Navigator.pop(ctx);
@@ -313,7 +334,8 @@ class _ProfilePageState extends State<ProfilePage>
                   : const Text('Изменить', style: TextStyle(color: Colors.white)),
             ),
           ],
-        ),
+        );
+        },
       ),
     );
   }
@@ -321,23 +343,25 @@ class _ProfilePageState extends State<ProfilePage>
   void _showLogoutDialog() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _card,
+      builder: (ctx) {
+        final dac = AppColors.of(ctx);
+        return AlertDialog(
+        backgroundColor: dac.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(children: [
-          Icon(Icons.logout_rounded, color: Colors.red, size: 22),
-          SizedBox(width: 10),
+        title: Row(children: [
+          const Icon(Icons.logout_rounded, color: Colors.red, size: 22),
+          const SizedBox(width: 10),
           Text('Выйти из аккаунта?',
-              style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700)),
+              style: TextStyle(color: dac.text, fontSize: 17, fontWeight: FontWeight.w700)),
         ]),
         content: Text(
           'Вы уверены? Потребуется повторный вход.',
-          style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14, height: 1.5),
+          style: TextStyle(color: dac.textSecondary, fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Отмена', style: TextStyle(color: Colors.white.withOpacity(0.5))),
+            child: Text('Отмена', style: TextStyle(color: dac.textMuted)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -356,26 +380,28 @@ class _ProfilePageState extends State<ProfilePage>
             child: const Text('Выйти', style: TextStyle(color: Colors.white)),
           ),
         ],
-      ),
+      );
+      },
     );
   }
 
   Widget _dialogField(TextEditingController ctrl, String hint, IconData icon,
       {bool obscure = false}) {
+    final ac = AppColors.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: _bg,
+        color: ac.bg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: ac.inputBorder),
       ),
       child: TextField(
         controller: ctrl,
         obscureText: obscure,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
+        style: TextStyle(color: ac.text, fontSize: 14),
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: _purple, size: 20),
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14),
+          hintStyle: TextStyle(color: ac.textHint, fontSize: 14),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
@@ -386,13 +412,14 @@ class _ProfilePageState extends State<ProfilePage>
   // ── BUILD ────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final ac = AppColors.of(context);
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ac.bg,
       body: userData == null
           ? const Center(child: CircularProgressIndicator(color: _purple))
           : RefreshIndicator(
               color: _purple,
-              backgroundColor: _card,
+              backgroundColor: ac.card,
               onRefresh: _loadAll,
               child: FadeTransition(
                 opacity: _fadeAnimation,
@@ -476,7 +503,7 @@ class _ProfilePageState extends State<ProfilePage>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: _purple.withOpacity(0.45),
+                      color: _purple.withValues(alpha: 0.45),
                       blurRadius: 28,
                       offset: const Offset(0, 10),
                     ),
@@ -511,12 +538,12 @@ class _ProfilePageState extends State<ProfilePage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.email_outlined,
-                      size: 13, color: Colors.white.withOpacity(0.4)),
+                      size: 13, color: Colors.white.withValues(alpha: 0.4)),
                   const SizedBox(width: 5),
                   Text(
                     widget.userEmail,
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.45), fontSize: 13),
+                        color: Colors.white.withValues(alpha: 0.45), fontSize: 13),
                   ),
                 ],
               ),
@@ -527,10 +554,10 @@ class _ProfilePageState extends State<ProfilePage>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
-                  color: (_hasPc ? _green : _orange).withOpacity(0.13),
+                  color: (_hasPc ? _green : _orange).withValues(alpha: 0.13),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: (_hasPc ? _green : _orange).withOpacity(0.4)),
+                      color: (_hasPc ? _green : _orange).withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -594,16 +621,17 @@ class _ProfilePageState extends State<ProfilePage>
     required String value,
     required Color color,
   }) {
+    final ac = AppColors.of(context);
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: _card,
+          color: ac.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.18)),
+          border: Border.all(color: color.withValues(alpha: 0.18)),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.25),
+                color: Colors.black.withValues(alpha: 0.25),
                 blurRadius: 10,
                 offset: const Offset(0, 4)),
           ],
@@ -613,7 +641,7 @@ class _ProfilePageState extends State<ProfilePage>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                  color: color.withOpacity(0.12), shape: BoxShape.circle),
+                  color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
               child: Icon(icon, color: color, size: 18),
             ),
             const SizedBox(height: 8),
@@ -624,7 +652,7 @@ class _ProfilePageState extends State<ProfilePage>
             Text(label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
+                    color: ac.textMuted,
                     fontSize: 10,
                     fontWeight: FontWeight.w500)),
           ],
@@ -664,6 +692,7 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget _noPcCard() {
+    final ac = AppColors.of(context);
     return GestureDetector(
       onTap: () async {
         final result = await Navigator.push(
@@ -676,23 +705,23 @@ class _ProfilePageState extends State<ProfilePage>
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
         decoration: BoxDecoration(
-          color: _card,
+          color: ac.card,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _orange.withOpacity(0.3)),
+          border: Border.all(color: _orange.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                  color: _orange.withOpacity(0.1), shape: BoxShape.circle),
+                  color: _orange.withValues(alpha: 0.1), shape: BoxShape.circle),
               child: const Icon(Icons.add_circle_outline_rounded,
                   color: _orange, size: 32),
             ),
             const SizedBox(height: 14),
-            const Text('Добавьте характеристики ПК',
+            Text('Добавьте характеристики ПК',
                 style: TextStyle(
-                    color: Colors.white,
+                    color: ac.text,
                     fontSize: 15,
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
@@ -700,7 +729,7 @@ class _ProfilePageState extends State<ProfilePage>
               'Укажите CPU, GPU и ОЗУ, чтобы проверять совместимость с играми',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.45),
+                  color: ac.textMuted,
                   fontSize: 12,
                   height: 1.5),
             ),
@@ -708,9 +737,9 @@ class _ProfilePageState extends State<ProfilePage>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
-                color: _orange.withOpacity(0.15),
+                color: _orange.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _orange.withOpacity(0.4)),
+                border: Border.all(color: _orange.withValues(alpha: 0.4)),
               ),
               child: const Text('Добавить ПК',
                   style: TextStyle(
@@ -725,6 +754,7 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget _pcSpecsCard(Map<String, dynamic> pc) {
+    final ac = AppColors.of(context);
     final specs = [
       _Spec(Icons.memory_rounded,          'Процессор',  pc['cpu']     ?? '—', const Color(0xFF6C63FF)),
       _Spec(Icons.videogame_asset_rounded, 'Видеокарта', pc['gpu']     ?? '—', const Color(0xFF4CAF50)),
@@ -736,9 +766,9 @@ class _ProfilePageState extends State<ProfilePage>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _card,
+        color: ac.card,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.07)),
+        border: Border.all(color: ac.divider),
       ),
       child: Column(
         children: List.generate(specs.length, (i) {
@@ -746,7 +776,7 @@ class _ProfilePageState extends State<ProfilePage>
             children: [
               _specRow(specs[i]),
               if (i < specs.length - 1)
-                Divider(height: 18, color: Colors.white.withOpacity(0.06), thickness: 1),
+                Divider(height: 18, color: ac.divider, thickness: 1),
             ],
           );
         }),
@@ -755,13 +785,14 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget _specRow(_Spec s) {
+    final ac = AppColors.of(context);
     return Row(
       children: [
         Container(
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-              color: s.color.withOpacity(0.12),
+              color: s.color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10)),
           child: Icon(s.icon, color: s.color, size: 18),
         ),
@@ -772,13 +803,13 @@ class _ProfilePageState extends State<ProfilePage>
             children: [
               Text(s.label,
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.4),
+                      color: ac.textMuted,
                       fontSize: 11,
                       fontWeight: FontWeight.w500)),
               const SizedBox(height: 2),
               Text(s.value,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: ac.text,
                       fontSize: 13,
                       fontWeight: FontWeight.w600),
                   overflow: TextOverflow.ellipsis),
@@ -813,9 +844,9 @@ class _ProfilePageState extends State<ProfilePage>
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 13),
                 decoration: BoxDecoration(
-                  color: _card,
+                  color: AppColors.of(context).card,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withOpacity(0.07)),
+                  border: Border.all(color: AppColors.of(context).divider),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -848,27 +879,28 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget _emptyHistory() {
+    final ac = AppColors.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 30),
       decoration: BoxDecoration(
-        color: _card,
+        color: ac.card,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.07)),
+        border: Border.all(color: ac.divider),
       ),
       child: Column(
         children: [
-          Icon(Icons.gamepad_outlined, color: Colors.white.withOpacity(0.18), size: 42),
+          Icon(Icons.gamepad_outlined, color: ac.textMuted, size: 42),
           const SizedBox(height: 10),
           Text('Проверок ещё не было',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.4),
+                  color: ac.textMuted,
                   fontSize: 13,
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           Text('Зайдите на главную и выберите игру',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.25), fontSize: 11)),
+                  color: ac.text.withValues(alpha: 0.25), fontSize: 11)),
         ],
       ),
     );
@@ -889,13 +921,15 @@ class _ProfilePageState extends State<ProfilePage>
           ),
         ),
       ),
-      child: Container(
+      child: Builder(builder: (ctx) {
+        final ac = AppColors.of(ctx);
+        return Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: _card,
+          color: ac.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -904,7 +938,7 @@ class _ProfilePageState extends State<ProfilePage>
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12)),
               child: Icon(c['icon'] as IconData, color: color, size: 22),
             ),
@@ -916,8 +950,8 @@ class _ProfilePageState extends State<ProfilePage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(c['game'] as String,
-                      style: const TextStyle(
-                          color: Colors.white,
+                      style: TextStyle(
+                          color: ac.text,
                           fontSize: 14,
                           fontWeight: FontWeight.w600),
                       maxLines: 1,
@@ -929,7 +963,7 @@ class _ProfilePageState extends State<ProfilePage>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.15),
+                          color: color.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(7),
                         ),
                         child: Text(c['result'] as String,
@@ -940,11 +974,11 @@ class _ProfilePageState extends State<ProfilePage>
                       ),
                       const SizedBox(width: 8),
                       Icon(Icons.speed_rounded,
-                          color: Colors.white.withOpacity(0.35), size: 12),
+                          color: ac.textMuted, size: 12),
                       const SizedBox(width: 3),
                       Text('$fps FPS',
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.45),
+                              color: ac.textMuted,
                               fontSize: 11)),
                     ],
                   ),
@@ -953,10 +987,11 @@ class _ProfilePageState extends State<ProfilePage>
             ),
 
             Icon(Icons.chevron_right_rounded,
-                color: Colors.white.withOpacity(0.2), size: 20),
+                color: ac.text.withValues(alpha: 0.2), size: 20),
           ],
         ),
-      ),
+      );
+      }),
     );
   }
 
@@ -969,9 +1004,9 @@ class _ProfilePageState extends State<ProfilePage>
         const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
-            color: _card,
+            color: AppColors.of(context).card,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(0.07)),
+            border: Border.all(color: AppColors.of(context).divider),
           ),
           child: Column(
             children: [
@@ -990,7 +1025,7 @@ class _ProfilePageState extends State<ProfilePage>
                       onChanged: (v) => ThemeManager.setDarkMode(v),
                       activeColor: _purple,
                       inactiveThumbColor: _amber,
-                      inactiveTrackColor: _amber.withOpacity(0.3),
+                      inactiveTrackColor: _amber.withValues(alpha: 0.3),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     showDivider: true,
@@ -1078,6 +1113,7 @@ class _ProfilePageState extends State<ProfilePage>
     Widget? trailing,
     bool showDivider = true,
   }) {
+    final ac = AppColors.of(context);
     return Column(
       children: [
         Material(
@@ -1093,7 +1129,7 @@ class _ProfilePageState extends State<ProfilePage>
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                        color: iconColor.withOpacity(0.13),
+                        color: iconColor.withValues(alpha: 0.13),
                         borderRadius: BorderRadius.circular(12)),
                     child: Icon(icon, color: iconColor, size: 20),
                   ),
@@ -1103,15 +1139,15 @@ class _ProfilePageState extends State<ProfilePage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(label,
-                            style: const TextStyle(
-                                color: Colors.white,
+                            style: TextStyle(
+                                color: ac.text,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600)),
                         if (subtitle != null && subtitle.isNotEmpty) ...[
                           const SizedBox(height: 2),
                           Text(subtitle,
                               style: TextStyle(
-                                  color: Colors.white.withOpacity(0.4),
+                                  color: ac.textMuted,
                                   fontSize: 11),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis),
@@ -1121,7 +1157,7 @@ class _ProfilePageState extends State<ProfilePage>
                   ),
                   trailing ??
                       Icon(Icons.chevron_right_rounded,
-                          color: Colors.white.withOpacity(0.22), size: 20),
+                          color: ac.text.withValues(alpha: 0.22), size: 20),
                 ],
               ),
             ),
@@ -1132,7 +1168,7 @@ class _ProfilePageState extends State<ProfilePage>
             padding: const EdgeInsets.only(left: 70, right: 16),
             child: Divider(
                 height: 1,
-                color: Colors.white.withOpacity(0.06),
+                color: ac.divider,
                 thickness: 1),
           ),
       ],
@@ -1147,9 +1183,9 @@ class _ProfilePageState extends State<ProfilePage>
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.07),
+          color: Colors.red.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.red.withOpacity(0.28)),
+          border: Border.all(color: Colors.red.withValues(alpha: 0.28)),
         ),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1169,14 +1205,15 @@ class _ProfilePageState extends State<ProfilePage>
 
   // ── shared helpers ────────────────────────────────────────────────────────────
   Widget _sectionHeader(IconData icon, String title, {Widget? trailing}) {
+    final ac = AppColors.of(context);
     return Row(
       children: [
         Icon(icon, color: _purple, size: 18),
         const SizedBox(width: 8),
         Expanded(
           child: Text(title,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: ac.text,
                   fontSize: 16,
                   fontWeight: FontWeight.w700)),
         ),
@@ -1195,9 +1232,9 @@ class _ProfilePageState extends State<ProfilePage>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: _purple.withOpacity(0.12),
+          color: _purple.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _purple.withOpacity(0.3)),
+          border: Border.all(color: _purple.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

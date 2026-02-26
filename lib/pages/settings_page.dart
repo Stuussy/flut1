@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/theme_manager.dart';
 import '../utils/cache_manager.dart';
+import '../utils/app_colors.dart';
 import 'about_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
-  static const _purple = Color(0xFF6C63FF);
-  static const _card = Color(0xFF1A1A2E);
-  static const _bg = Color(0xFF0D0D1E);
+  static const _purple = AppColors.purple;
 
   @override
   Widget build(BuildContext context) {
+    final ac = AppColors.of(context);
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ac.bg,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(context),
+            _buildHeader(context, ac),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -26,23 +26,23 @@ class SettingsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Тема ──────────────────────────────────────────────
-                    _sectionLabel('Оформление'),
+                    _sectionLabel('Оформление', ac),
                     const SizedBox(height: 10),
-                    _buildThemeSelector(),
+                    _buildThemeSelector(context, ac),
 
                     const SizedBox(height: 24),
 
                     // ── Кэш ───────────────────────────────────────────────
-                    _sectionLabel('Данные'),
+                    _sectionLabel('Данные', ac),
                     const SizedBox(height: 10),
-                    _buildCacheTile(context),
+                    _buildCacheTile(context, ac),
 
                     const SizedBox(height: 24),
 
                     // ── Информация ────────────────────────────────────────
-                    _sectionLabel('Информация'),
+                    _sectionLabel('Информация', ac),
                     const SizedBox(height: 10),
-                    _buildInfoGroup(context),
+                    _buildInfoGroup(context, ac),
 
                     const SizedBox(height: 8),
                   ],
@@ -56,14 +56,14 @@ class SettingsPage extends StatelessWidget {
   }
 
   // ─── Header ───────────────────────────────────────────────────────────────
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, AppColors ac) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: _card,
+        color: ac.card,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -72,15 +72,15 @@ class SettingsPage extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new,
-                color: Colors.white, size: 20),
+            icon: Icon(Icons.arrow_back_ios_new,
+                color: ac.text, size: 20),
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 8),
-          const Text(
+          Text(
             'Настройки',
             style: TextStyle(
-                color: Colors.white,
+                color: ac.text,
                 fontSize: 18,
                 fontWeight: FontWeight.w700),
           ),
@@ -89,11 +89,11 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _sectionLabel(String label) {
+  Widget _sectionLabel(String label, AppColors ac) {
     return Text(
       label.toUpperCase(),
       style: TextStyle(
-        color: Colors.white.withOpacity(0.4),
+        color: ac.textMuted,
         fontSize: 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 1.1,
@@ -102,15 +102,15 @@ class SettingsPage extends StatelessWidget {
   }
 
   // ─── Выбор темы (3 кнопки) ───────────────────────────────────────────────
-  Widget _buildThemeSelector() {
+  Widget _buildThemeSelector(BuildContext context, AppColors ac) {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeManager.notifier,
       builder: (_, current, __) {
         return Container(
           decoration: BoxDecoration(
-            color: _card,
+            color: ac.card,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.07)),
+            border: Border.all(color: ac.subtleBorder),
           ),
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -128,9 +128,9 @@ class SettingsPage extends StatelessWidget {
                     size: 20,
                   ),
                   const SizedBox(width: 10),
-                  const Text('Тема приложения',
+                  Text('Тема приложения',
                       style: TextStyle(
-                          color: Colors.white,
+                          color: ac.text,
                           fontSize: 14,
                           fontWeight: FontWeight.w600)),
                 ],
@@ -143,6 +143,7 @@ class SettingsPage extends StatelessWidget {
                     ThemeMode.dark,
                     Icons.dark_mode_rounded,
                     'Тёмная',
+                    ac,
                   ),
                   const SizedBox(width: 8),
                   _themeOption(
@@ -150,6 +151,7 @@ class SettingsPage extends StatelessWidget {
                     ThemeMode.light,
                     Icons.light_mode_rounded,
                     'Светлая',
+                    ac,
                   ),
                   const SizedBox(width: 8),
                   _themeOption(
@@ -157,6 +159,7 @@ class SettingsPage extends StatelessWidget {
                     ThemeMode.system,
                     Icons.brightness_auto_rounded,
                     'Системная',
+                    ac,
                   ),
                 ],
               ),
@@ -168,7 +171,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _themeOption(
-      ThemeMode current, ThemeMode value, IconData icon, String label) {
+      ThemeMode current, ThemeMode value, IconData icon, String label, AppColors ac) {
     final isActive = current == value;
     return Expanded(
       child: GestureDetector(
@@ -177,11 +180,10 @@ class SettingsPage extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color:
-                isActive ? _purple : Colors.white.withOpacity(0.05),
+            color: isActive ? _purple : ac.text.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isActive ? _purple : Colors.white.withOpacity(0.1),
+              color: isActive ? _purple : ac.text.withValues(alpha: 0.1),
             ),
           ),
           child: Column(
@@ -189,7 +191,7 @@ class SettingsPage extends StatelessWidget {
               Icon(icon,
                   color: isActive
                       ? Colors.white
-                      : Colors.white.withOpacity(0.5),
+                      : ac.text.withValues(alpha: 0.5),
                   size: 20),
               const SizedBox(height: 6),
               Text(
@@ -197,7 +199,7 @@ class SettingsPage extends StatelessWidget {
                 style: TextStyle(
                   color: isActive
                       ? Colors.white
-                      : Colors.white.withOpacity(0.5),
+                      : ac.text.withValues(alpha: 0.5),
                   fontSize: 11,
                   fontWeight:
                       isActive ? FontWeight.w700 : FontWeight.w400,
@@ -211,44 +213,46 @@ class SettingsPage extends StatelessWidget {
   }
 
   // ─── Очистка кэша ────────────────────────────────────────────────────────
-  Widget _buildCacheTile(BuildContext context) {
+  Widget _buildCacheTile(BuildContext context, AppColors ac) {
     return Container(
       decoration: BoxDecoration(
-        color: _card,
+        color: ac.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.07)),
+        border: Border.all(color: ac.subtleBorder),
       ),
       child: _tile(
+        context: context,
+        ac: ac,
         icon: Icons.delete_sweep_rounded,
         iconColor: Colors.red,
         label: 'Очистить кэш',
         subtitle: 'Данные совместимости (TTL 24 ч)',
-        trailing: const Icon(Icons.chevron_right, color: Colors.white24),
-        onTap: () => _confirmClearCache(context),
+        trailing: Icon(Icons.chevron_right, color: ac.text.withValues(alpha: 0.24)),
+        onTap: () => _confirmClearCache(context, ac),
       ),
     );
   }
 
-  Future<void> _confirmClearCache(BuildContext context) async {
+  Future<void> _confirmClearCache(BuildContext context, AppColors ac) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: _card,
+        backgroundColor: ac.card,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Очистить кэш?',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        title: Text('Очистить кэш?',
+            style: TextStyle(color: ac.text, fontWeight: FontWeight.w700)),
         content: Text(
           'Все сохранённые результаты совместимости будут удалены. '
           'При следующем открытии игры данные загрузятся с сервера заново.',
           style: TextStyle(
-              color: Colors.white.withOpacity(0.65), fontSize: 13, height: 1.4),
+              color: ac.textSecondary, fontSize: 13, height: 1.4),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text('Отмена',
-                style: TextStyle(color: Colors.white.withOpacity(0.5))),
+                style: TextStyle(color: ac.textMuted)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -285,22 +289,24 @@ class SettingsPage extends StatelessWidget {
   }
 
   // ─── Информация ───────────────────────────────────────────────────────────
-  Widget _buildInfoGroup(BuildContext context) {
+  Widget _buildInfoGroup(BuildContext context, AppColors ac) {
     return Container(
       decoration: BoxDecoration(
-        color: _card,
+        color: ac.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.07)),
+        border: Border.all(color: ac.subtleBorder),
       ),
       child: Column(
         children: [
           _tile(
+            context: context,
+            ac: ac,
             icon: Icons.info_outline_rounded,
             iconColor: const Color(0xFF00BCD4),
             label: 'О приложении',
             subtitle: 'Методология, FAQ, статусы FPS',
             trailing:
-                const Icon(Icons.chevron_right, color: Colors.white24),
+                Icon(Icons.chevron_right, color: ac.text.withValues(alpha: 0.24)),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AboutPage()),
@@ -308,18 +314,22 @@ class SettingsPage extends StatelessWidget {
             showDivider: true,
           ),
           _tile(
+            context: context,
+            ac: ac,
             icon: Icons.support_agent_rounded,
             iconColor: const Color(0xFF4CAF50),
             label: 'Поддержка',
             subtitle: 'Сообщить об ошибке или задать вопрос',
             trailing:
-                const Icon(Icons.open_in_new_rounded, color: Colors.white24, size: 18),
-            onTap: () => _launchSupport(context),
+                Icon(Icons.open_in_new_rounded, color: ac.text.withValues(alpha: 0.24), size: 18),
+            onTap: () => _launchSupport(context, ac),
             showDivider: true,
           ),
           _tile(
+            context: context,
+            ac: ac,
             icon: Icons.tag_rounded,
-            iconColor: Colors.white54,
+            iconColor: ac.textMuted,
             label: 'Версия приложения',
             subtitle: 'v1.0.0 (build 1)',
             trailing: null,
@@ -330,7 +340,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Future<void> _launchSupport(BuildContext context) async {
+  Future<void> _launchSupport(BuildContext context, AppColors ac) async {
     final uri = Uri.parse('mailto:support@gamepulse.app?subject=GamePulse%20Support');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -338,7 +348,7 @@ class SettingsPage extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Напишите нам: support@gamepulse.app'),
-          backgroundColor: const Color(0xFF1A1A2E),
+          backgroundColor: ac.card,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -351,6 +361,8 @@ class SettingsPage extends StatelessWidget {
 
   // ─── Generic tile ─────────────────────────────────────────────────────────
   Widget _tile({
+    required BuildContext context,
+    required AppColors ac,
     required IconData icon,
     required Color iconColor,
     required String label,
@@ -372,7 +384,7 @@ class SettingsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.12),
+                    color: iconColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, color: iconColor, size: 18),
@@ -383,14 +395,14 @@ class SettingsPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(label,
-                          style: const TextStyle(
-                              color: Colors.white,
+                          style: TextStyle(
+                              color: ac.text,
                               fontSize: 14,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 2),
                       Text(subtitle,
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.45),
+                              color: ac.textMuted,
                               fontSize: 12)),
                     ],
                   ),
@@ -406,7 +418,7 @@ class SettingsPage extends StatelessWidget {
               thickness: 1,
               indent: 16,
               endIndent: 16,
-              color: Colors.white.withOpacity(0.06)),
+              color: ac.divider),
       ],
     );
   }

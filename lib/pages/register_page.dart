@@ -239,7 +239,7 @@ class _RegisterPageState extends State<RegisterPage>
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF6C63FF).withOpacity(0.15),
+                            color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Icon(
@@ -266,7 +266,7 @@ class _RegisterPageState extends State<RegisterPage>
                         Text(
                           "Начните играть с GamePulse",
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 14,
                           ),
                         ),
@@ -347,7 +347,7 @@ class _RegisterPageState extends State<RegisterPage>
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               elevation: 0,
-                              disabledBackgroundColor: const Color(0xFF6C63FF).withOpacity(0.5),
+                              disabledBackgroundColor: const Color(0xFF6C63FF).withValues(alpha: 0.5),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
@@ -376,7 +376,7 @@ class _RegisterPageState extends State<RegisterPage>
                             text: TextSpan(
                               text: "Уже есть аккаунт? ",
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.6),
+                                color: Colors.white.withValues(alpha: 0.6),
                                 fontSize: 14,
                               ),
                               children: const [
@@ -416,7 +416,7 @@ class _RegisterPageState extends State<RegisterPage>
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1.5,
         ),
       ),
@@ -434,7 +434,7 @@ class _RegisterPageState extends State<RegisterPage>
           suffixIcon: suffixIcon,
           hintText: hintText,
           hintStyle: TextStyle(
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
             fontSize: 15,
           ),
           border: InputBorder.none,

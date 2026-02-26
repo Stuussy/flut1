@@ -106,13 +106,13 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                     color: Colors.white, fontWeight: FontWeight.w700)),
             content: Text(message,
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.7))),
+                    color: Colors.white.withValues(alpha: 0.7))),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
                 child: Text("Отмена",
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.6))),
+                        color: Colors.white.withValues(alpha: 0.6))),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
@@ -222,7 +222,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         color: const Color(0xFF1A1A2E),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -233,7 +233,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFA726).withOpacity(0.15),
+              color: const Color(0xFFFFA726).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.admin_panel_settings,
@@ -257,13 +257,13 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                     Text(
                       "${_games.length} игр",
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 12),
                     ),
                     Text(
                       "  |  $_totalComponents компонентов",
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 12),
                     ),
                   ],
@@ -291,7 +291,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         color: const Color(0xFF1A1A2E),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -335,7 +335,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFFFFA726).withOpacity(0.15)
+                ? const Color(0xFFFFA726).withValues(alpha: 0.15)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -346,7 +346,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                 icon,
                 color: isSelected
                     ? const Color(0xFFFFA726)
-                    : Colors.white.withOpacity(0.4),
+                    : Colors.white.withValues(alpha: 0.4),
                 size: 24,
               ),
               const SizedBox(height: 4),
@@ -355,7 +355,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                 style: TextStyle(
                   color: isSelected
                       ? const Color(0xFFFFA726)
-                      : Colors.white.withOpacity(0.4),
+                      : Colors.white.withValues(alpha: 0.4),
                   fontSize: 12,
                   fontWeight:
                       isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -421,11 +421,11 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.games,
-                          color: Colors.white.withOpacity(0.2), size: 64),
+                          color: Colors.white.withValues(alpha: 0.2), size: 64),
                       const SizedBox(height: 16),
                       Text("Нет игр",
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 16)),
                     ],
                   ),
@@ -453,7 +453,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,7 +463,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6C63FF).withOpacity(0.15),
+                  color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.games,
@@ -510,9 +510,9 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.15)),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -521,7 +521,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
             padding:
                 const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
@@ -535,7 +535,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
             child: Text(
               "CPU: $cpus | GPU: $gpus | RAM: $ram",
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.6), fontSize: 11),
+                  color: Colors.white.withValues(alpha: 0.6), fontSize: 11),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -600,11 +600,11 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.hardware,
-                          color: Colors.white.withOpacity(0.2), size: 64),
+                          color: Colors.white.withValues(alpha: 0.2), size: 64),
                       const SizedBox(height: 16),
                       Text("Нет компонентов",
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 16)),
                     ],
                   ),
@@ -693,7 +693,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         children: [
@@ -715,7 +715,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: budgetColor.withOpacity(0.15),
+                        color: budgetColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -730,17 +730,17 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                     Text(
                       "\$$price",
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 12),
                     ),
                     const SizedBox(width: 8),
                     Icon(Icons.speed,
-                        color: Colors.white.withOpacity(0.3), size: 14),
+                        color: Colors.white.withValues(alpha: 0.3), size: 14),
                     const SizedBox(width: 4),
                     Text(
                       "$performance",
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                           fontSize: 12),
                     ),
                   ],

@@ -1,5 +1,6 @@
 import 'dart:async';
 import '../utils/api_config.dart';
+import '../utils/app_colors.dart';
 import '../utils/favorites_manager.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -367,8 +368,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   // ──────────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final ac = AppColors.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1E),
+      backgroundColor: ac.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -396,7 +398,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildContent() {
     return RefreshIndicator(
       color: const Color(0xFF6C63FF),
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: AppColors.of(context).card,
       onRefresh: () async {
         await _loadGames();
         await _loadFavorites();
@@ -431,38 +433,41 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           // Поиск
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1A2E),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
-              ),
-              child: TextField(
-                controller: _searchCtrl,
-                onChanged: _onSearchChanged,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search,
-                      color: Color(0xFF6C63FF), size: 20),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.close,
-                              color: Colors.white.withOpacity(0.5), size: 18),
-                          onPressed: () {
-                            _searchCtrl.clear();
-                            _onSearchChanged('');
-                          },
-                        )
-                      : null,
-                  hintText: 'Поиск игры...',
-                  hintStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.4), fontSize: 14),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+            child: Builder(builder: (context) {
+              final ac = AppColors.of(context);
+              return Container(
+                decoration: BoxDecoration(
+                  color: ac.card,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: ac.inputBorder),
                 ),
-              ),
-            ),
+                child: TextField(
+                  controller: _searchCtrl,
+                  onChanged: _onSearchChanged,
+                  style: TextStyle(color: ac.text, fontSize: 14),
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search,
+                        color: Color(0xFF6C63FF), size: 20),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(Icons.close,
+                                color: ac.textMuted, size: 18),
+                            onPressed: () {
+                              _searchCtrl.clear();
+                              _onSearchChanged('');
+                            },
+                          )
+                        : null,
+                    hintText: 'Поиск игры...',
+                    hintStyle: TextStyle(
+                        color: ac.textHint, fontSize: 14),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                  ),
+                ),
+              );
+            }),
           ),
 
           const SizedBox(height: 12),
@@ -483,6 +488,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   // ─── Экран ошибки сети ───────────────────────────────────────────────────
   Widget _buildNoInternetWidget() {
+    final ac = AppColors.of(context);
     final isNetworkErr = _errorMessage.contains('интернет') ||
         _errorMessage.contains('подключ');
     return Center(
@@ -495,7 +501,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: (isNetworkErr ? Colors.red : Colors.orange)
-                    .withOpacity(0.1),
+                    .withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -507,8 +513,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             const SizedBox(height: 24),
             Text(
               isNetworkErr ? 'Нет подключения' : 'Ошибка загрузки',
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: ac.text,
                   fontSize: 20,
                   fontWeight: FontWeight.w700),
             ),
@@ -517,7 +523,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               _errorMessage,
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
+                  color: ac.textMuted,
                   fontSize: 14,
                   height: 1.5),
             ),
@@ -549,11 +555,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
+      builder: (_) => Builder(builder: (sheetCtx) {
+        final ac = AppColors.of(sheetCtx);
+        return Container(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-        decoration: const BoxDecoration(
-          color: Color(0xFF1A1A2E),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: ac.card,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -563,7 +571,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: ac.text.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -571,17 +579,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFB300).withOpacity(0.15),
+                color: const Color(0xFFFFB300).withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.star_rounded,
                   color: Color(0xFFFFB300), size: 36),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Лимит избранного',
               style: TextStyle(
-                  color: Colors.white,
+                  color: ac.text,
                   fontSize: 18,
                   fontWeight: FontWeight.w700),
             ),
@@ -592,7 +600,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               'Снимите звёздочку с одной игры, чтобы добавить новую.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
+                  color: ac.textSecondary,
                   fontSize: 14,
                   height: 1.5),
             ),
@@ -616,13 +624,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ],
         ),
-      ),
+      );
+      }),
     );
   }
 
   // ─── Заголовок секции ─────────────────────────────────────────────────────
   Widget _buildSectionHeader(IconData icon, String title,
       {Color color = const Color(0xFF6C63FF)}) {
+    final ac = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -631,8 +641,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           const SizedBox(width: 10),
           Text(
             title,
-            style: const TextStyle(
-                color: Colors.white,
+            style: TextStyle(
+                color: ac.text,
                 fontSize: 18,
                 fontWeight: FontWeight.w700),
           ),
@@ -643,13 +653,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   // ─── AppBar ───────────────────────────────────────────────────────────────
   Widget _buildAppBar() {
+    final ac = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: ac.card,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -675,7 +686,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 Text(
                   "Проверь совместимость игр",
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: ac.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -695,10 +706,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF6C63FF).withOpacity(0.15),
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                    color: const Color(0xFF6C63FF).withValues(alpha: 0.3)),
               ),
               child: const Icon(Icons.bar_chart_rounded,
                   color: Color(0xFF6C63FF), size: 24),
@@ -711,6 +722,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   // ─── Фильтры жанра ───────────────────────────────────────────────────────
   Widget _buildGenreFilters() {
+    final ac = AppColors.of(context);
     return SizedBox(
       height: 38,
       child: ListView.separated(
@@ -730,19 +742,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               decoration: BoxDecoration(
                 color: isActive
                     ? const Color(0xFF6C63FF)
-                    : const Color(0xFF1A1A2E),
+                    : ac.card,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isActive
                       ? const Color(0xFF6C63FF)
-                      : Colors.white.withOpacity(0.15),
+                      : ac.text.withValues(alpha: 0.15),
                 ),
               ),
               child: Text(
                 genre,
                 style: TextStyle(
-                  color:
-                      isActive ? Colors.white : Colors.white.withOpacity(0.6),
+                  color: isActive ? Colors.white : ac.textSecondary,
                   fontSize: 12,
                   fontWeight:
                       isActive ? FontWeight.w700 : FontWeight.w400,
@@ -757,12 +768,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   // ─── Placeholder для изображения ─────────────────────────────────────────
   Widget _buildImagePlaceholder({double iconSize = 28}) {
+    final ac = AppColors.of(context);
     return Container(
-      color: const Color(0xFF1A1A2E),
+      color: ac.card,
       child: Center(
         child: Icon(
           Icons.videogame_asset_outlined,
-          color: Colors.white.withOpacity(0.12),
+          color: ac.text.withValues(alpha: 0.12),
           size: iconSize,
         ),
       ),
@@ -814,7 +826,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   boxShadow: [
                     BoxShadow(
                       color: (game["colors"] as List<Color>)[0]
-                          .withOpacity(0.3),
+                          .withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -855,7 +867,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withOpacity(0.8),
+                              Colors.black.withValues(alpha: 0.8),
                             ],
                             stops: const [0.5, 1.0],
                           ),
@@ -871,7 +883,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.45),
+                              color: Colors.black.withValues(alpha: 0.45),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -880,7 +892,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   : Icons.star_border_rounded,
                               color: isFav
                                   ? const Color(0xFFFFB300)
-                                  : Colors.white.withOpacity(0.8),
+                                  : Colors.white.withValues(alpha: 0.8),
                               size: 18,
                             ),
                           ),
@@ -907,7 +919,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             Text(
                               game["subtitle"]!,
                               style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                   fontSize: 11),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -958,7 +970,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 boxShadow: [
                   BoxShadow(
                     color: (game["colors"] as List<Color>)[0]
-                        .withOpacity(0.25),
+                        .withValues(alpha: 0.25),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -996,7 +1008,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withOpacity(0.85),
+                            Colors.black.withValues(alpha: 0.85),
                           ],
                           stops: const [0.4, 1.0],
                         ),
@@ -1008,7 +1020,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.4),
+                          color: Colors.black.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Icon(Icons.star_rounded,
@@ -1045,20 +1057,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         _filteredGames.isEmpty && (_searchQuery.isNotEmpty || _selectedGenre != null);
 
     if (isEmpty) {
+      final ac = AppColors.of(context);
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
         child: Center(
           child: Column(
             children: [
               Icon(Icons.search_off,
-                  color: Colors.white.withOpacity(0.3), size: 48),
+                  color: ac.textMuted, size: 48),
               const SizedBox(height: 12),
               Text(
                 _searchQuery.isNotEmpty
                     ? 'Игра не найдена'
                     : 'Нет игр в этом жанре',
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.5), fontSize: 15),
+                    color: ac.textMuted, fontSize: 15),
               ),
               if (_selectedGenre != null) ...[
                 const SizedBox(height: 8),
@@ -1113,7 +1126,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 boxShadow: [
                   BoxShadow(
                     color: (game["colors"] as List<Color>)[0]
-                        .withOpacity(0.2),
+                        .withValues(alpha: 0.2),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -1151,7 +1164,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withOpacity(0.9),
+                            Colors.black.withValues(alpha: 0.9),
                           ],
                           stops: const [0.4, 1.0],
                         ),
@@ -1167,7 +1180,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.45),
+                            color: Colors.black.withValues(alpha: 0.45),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -1176,7 +1189,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 : Icons.star_border_rounded,
                             color: isFav
                                 ? const Color(0xFFFFB300)
-                                : Colors.white.withOpacity(0.8),
+                                : Colors.white.withValues(alpha: 0.8),
                             size: 16,
                           ),
                         ),
@@ -1217,7 +1230,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Row(

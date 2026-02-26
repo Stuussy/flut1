@@ -181,7 +181,7 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
         color: const Color(0xFF1A1A2E),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -198,7 +198,7 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF6C63FF).withOpacity(0.15),
+              color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.smart_toy,
@@ -219,7 +219,7 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
                 Text(
                   "Помощь администратору",
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.6), fontSize: 12),
+                      color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
                 ),
               ],
             ),
@@ -228,10 +228,10 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
             padding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50).withOpacity(0.15),
+              color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                  color: const Color(0xFF4CAF50).withOpacity(0.3)),
+                  color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
             ),
             child: const Row(
               children: [
@@ -295,9 +295,9 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
           child: ActionChip(
             label: Text(_quickQuestions[index],
                 style: const TextStyle(color: Colors.white, fontSize: 13)),
-            backgroundColor: const Color(0xFF6C63FF).withOpacity(0.15),
+            backgroundColor: const Color(0xFF6C63FF).withValues(alpha: 0.15),
             side: BorderSide(
-                color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.3)),
             onPressed: () => _sendMessage(_quickQuestions[index]),
           ),
         ),
@@ -312,7 +312,7 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
         color: const Color(0xFF1A1A2E),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -326,7 +326,7 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
                 color: const Color(0xFF0D0D1E),
                 borderRadius: BorderRadius.circular(24),
                 border:
-                    Border.all(color: Colors.white.withOpacity(0.1)),
+                    Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
               child: TextField(
                 controller: _messageController,
@@ -335,7 +335,7 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
                 decoration: InputDecoration(
                   hintText: "Задайте вопрос...",
                   hintStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.4),
+                      color: Colors.white.withValues(alpha: 0.4),
                       fontSize: 14),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
@@ -378,7 +378,7 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: const Color(0xFF6C63FF).withOpacity(0.15),
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(Icons.smart_toy,
@@ -405,7 +405,7 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
                 ),
                 border: isUser
                     ? null
-                    : Border.all(color: Colors.white.withOpacity(0.1)),
+                    : Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
               child: SelectableText(
                 (message['text'] ?? '').toString(),
@@ -420,7 +420,7 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16)),
               child:
                   const Icon(Icons.person, color: Colors.white, size: 16),
