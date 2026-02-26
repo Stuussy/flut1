@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class AdminAddComponentPage extends StatefulWidget {
-  const AdminAddComponentPage({super.key});
+  final String adminToken;
+  const AdminAddComponentPage({super.key, this.adminToken = ''});
 
   @override
   State<AdminAddComponentPage> createState() =>
@@ -77,7 +78,7 @@ class _AdminAddComponentPageState extends State<AdminAddComponentPage> {
       final url = Uri.parse('$_baseUrl/admin/add-component');
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${widget.adminToken}'},
         body: jsonEncode({
           'type': _selectedType,
           'name': name,

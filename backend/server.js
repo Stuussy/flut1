@@ -7,6 +7,7 @@ const { GoogleGenAI } = require("@google/genai");
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const JWT_SECRET = process.env.JWT_SECRET || "gamepulse_jwt_secret_2024";
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || "gamepulse_admin_jwt_secret_2024_secure";
 
 const app = express();
 app.use((req, res, next) => {
@@ -35,6 +36,23 @@ function authenticateToken(req, res, next) {
   });
 }
 
+function adminAuth(req, res, next) {
+  const token = req.headers["authorization"]?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ success: false, message: "Требуется авторизация администратора" });
+  }
+  try {
+    const decoded = jwt.verify(token, ADMIN_JWT_SECRET);
+    if (!decoded.isAdmin) {
+      return res.status(403).json({ success: false, message: "Доступ запрещён" });
+    }
+    req.admin = decoded;
+    next();
+  } catch {
+    res.status(401).json({ success: false, message: "Токен администратора недействителен" });
+  }
+}
+
 mongoose
   .connect("mongodb://localhost:27017/gamepulse", {
     useNewUrlParser: true,
@@ -53,6 +71,8 @@ const UserSchema = new mongoose.Schema({
   username: String,
   email: String,
   password: String,
+  isBlocked: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
   pcSpecs: {
     cpu: String,
     gpu: String,
@@ -137,15 +157,17 @@ const CustomComponent = mongoose.model("CustomComponent", CustomComponentSchema)
 
 async function seedAdmin() {
   try {
-    const existing = await Admin.findOne({ email: "admin@gamepulse.com" });
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@gamepulse.com";
+    const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+    const existing = await Admin.findOne({ email: adminEmail });
     if (!existing) {
-      const hashedPassword = await bcrypt.hash("admin123", 10);
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
       await new Admin({
-        email: "admin@gamepulse.com",
+        email: adminEmail,
         password: hashedPassword,
         name: "Администратор",
       }).save();
-      console.log("✅ Админ создан: admin@gamepulse.com / admin123");
+      console.log(`✅ Админ создан: ${adminEmail}`);
     }
   } catch (err) {
     console.error("Ошибка создания админа:", err);
@@ -1533,14 +1555,19 @@ app.post("/admin/login", async (req, res) => {
     if (!isValid) {
       return res.json({ success: false, message: "Неверный email или пароль" });
     }
-    res.json({ success: true, message: "Успешный вход", admin: { email: admin.email, name: admin.name } });
+    const token = jwt.sign(
+      { email: admin.email, name: admin.name, isAdmin: true },
+      ADMIN_JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    res.json({ success: true, message: "Успешный вход", token, admin: { email: admin.email, name: admin.name } });
   } catch (err) {
     console.error("Ошибка входа админа:", err);
     res.json({ success: false, message: "Ошибка сервера" });
   }
 });
 
-app.get("/admin/games", (req, res) => {
+app.get("/admin/games", adminAuth, (req, res) => {
   const games = Object.entries(gamesDatabase).map(([title, data]) => ({
     title,
     minimum: data.minimum,
@@ -1550,7 +1577,7 @@ app.get("/admin/games", (req, res) => {
   res.json({ success: true, games });
 });
 
-app.get("/admin/components", (req, res) => {
+app.get("/admin/components", adminAuth, (req, res) => {
   const components = {};
   for (const [type, items] of Object.entries(componentPrices)) {
     components[type] = Object.entries(items).map(([name, data]) => ({
@@ -1564,7 +1591,7 @@ app.get("/admin/components", (req, res) => {
   res.json({ success: true, components });
 });
 
-app.post("/admin/add-game", async (req, res) => {
+app.post("/admin/add-game", adminAuth, async (req, res) => {
   const { title, minimum, recommended, high } = req.body;
   if (!title || !minimum || !recommended || !high) {
     return res.status(400).json({ success: false, message: "Заполните все поля" });
@@ -1583,7 +1610,7 @@ app.post("/admin/add-game", async (req, res) => {
   }
 });
 
-app.post("/admin/add-component", async (req, res) => {
+app.post("/admin/add-component", adminAuth, async (req, res) => {
   const { type, name, price, link, performance, budget } = req.body;
   if (!type || !name || !price) {
     return res.status(400).json({ success: false, message: "Заполните обязательные поля" });
@@ -1603,7 +1630,7 @@ app.post("/admin/add-component", async (req, res) => {
   }
 });
 
-app.delete("/admin/delete-game", async (req, res) => {
+app.delete("/admin/delete-game", adminAuth, async (req, res) => {
   const { title } = req.body;
   try {
     delete gamesDatabase[title];
@@ -1614,7 +1641,7 @@ app.delete("/admin/delete-game", async (req, res) => {
   }
 });
 
-app.delete("/admin/delete-component", async (req, res) => {
+app.delete("/admin/delete-component", adminAuth, async (req, res) => {
   const { type, name } = req.body;
   try {
     if (componentPrices[type]) delete componentPrices[type][name];
@@ -1625,7 +1652,7 @@ app.delete("/admin/delete-component", async (req, res) => {
   }
 });
 
-app.post("/admin/ai-chat", async (req, res) => {
+app.post("/admin/ai-chat", adminAuth, async (req, res) => {
   const { question, messages = [] } = req.body;
   try {
     const chatHistory = [];
@@ -1652,6 +1679,142 @@ app.post("/admin/ai-chat", async (req, res) => {
   } catch (err) {
     console.error("Admin AI chat error:", err);
     res.status(500).json({ success: false, message: "Ошибка AI сервиса" });
+  }
+});
+
+// ── admin: edit game ──────────────────────────────────────────────────────────
+app.put("/admin/edit-game", adminAuth, async (req, res) => {
+  const { oldTitle, title, minimum, recommended, high } = req.body;
+  if (!title || !minimum || !recommended || !high) {
+    return res.status(400).json({ success: false, message: "Заполните все поля" });
+  }
+  try {
+    const key = oldTitle || title;
+    if (oldTitle && oldTitle !== title) delete gamesDatabase[oldTitle];
+    gamesDatabase[title] = { minimum, recommended, high };
+    await CustomGame.findOneAndUpdate(
+      { title: key },
+      { title, minimum, recommended, high },
+      { upsert: true, new: true }
+    );
+    if (oldTitle && oldTitle !== title) await CustomGame.findOneAndDelete({ title: oldTitle });
+    res.json({ success: true, message: "Игра обновлена" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Ошибка сервера" });
+  }
+});
+
+// ── admin: edit component ─────────────────────────────────────────────────────
+app.put("/admin/edit-component", adminAuth, async (req, res) => {
+  const { type, oldName, name, price, link, performance, budget } = req.body;
+  if (!type || !name || price == null) {
+    return res.status(400).json({ success: false, message: "Заполните обязательные поля" });
+  }
+  try {
+    if (!componentPrices[type]) componentPrices[type] = {};
+    if (oldName && oldName !== name) delete componentPrices[type][oldName];
+    componentPrices[type][name] = { price, link: link || "", performance: performance || 100, budget: budget || "medium" };
+    await CustomComponent.findOneAndUpdate(
+      { type, name: oldName || name },
+      { type, name, price, link: link || "", performance: performance || 100, budget: budget || "medium" },
+      { upsert: true, new: true }
+    );
+    if (oldName && oldName !== name) await CustomComponent.findOneAndDelete({ type, name: oldName });
+    res.json({ success: true, message: "Компонент обновлён" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Ошибка сервера" });
+  }
+});
+
+// ── admin: bulk delete games ──────────────────────────────────────────────────
+app.delete("/admin/bulk-delete-games", adminAuth, async (req, res) => {
+  const { titles } = req.body;
+  if (!Array.isArray(titles)) return res.status(400).json({ success: false, message: "Передайте массив titles" });
+  try {
+    for (const title of titles) {
+      delete gamesDatabase[title];
+      await CustomGame.findOneAndDelete({ title });
+    }
+    res.json({ success: true, message: `Удалено ${titles.length} игр` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Ошибка сервера" });
+  }
+});
+
+// ── admin: bulk delete components ─────────────────────────────────────────────
+app.delete("/admin/bulk-delete-components", adminAuth, async (req, res) => {
+  const { components } = req.body; // [{type, name}]
+  if (!Array.isArray(components)) return res.status(400).json({ success: false, message: "Передайте массив components" });
+  try {
+    for (const { type, name } of components) {
+      if (componentPrices[type]) delete componentPrices[type][name];
+      await CustomComponent.findOneAndDelete({ type, name });
+    }
+    res.json({ success: true, message: `Удалено ${components.length} компонентов` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Ошибка сервера" });
+  }
+});
+
+// ── admin: get all users ──────────────────────────────────────────────────────
+app.get("/admin/users", adminAuth, async (req, res) => {
+  try {
+    const users = await User.find({}, "-password").sort({ createdAt: -1 });
+    res.json({ success: true, users });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Ошибка сервера" });
+  }
+});
+
+// ── admin: delete user ────────────────────────────────────────────────────────
+app.delete("/admin/delete-user", adminAuth, async (req, res) => {
+  const { email } = req.body;
+  try {
+    await User.findOneAndDelete({ email });
+    res.json({ success: true, message: `Пользователь ${email} удалён` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Ошибка сервера" });
+  }
+});
+
+// ── admin: block/unblock user ─────────────────────────────────────────────────
+app.post("/admin/block-user", adminAuth, async (req, res) => {
+  const { email, block } = req.body;
+  try {
+    await User.findOneAndUpdate({ email }, { isBlocked: !!block });
+    res.json({ success: true, message: block ? `${email} заблокирован` : `${email} разблокирован` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Ошибка сервера" });
+  }
+});
+
+// ── admin: statistics ─────────────────────────────────────────────────────────
+app.get("/admin/stats", adminAuth, async (req, res) => {
+  try {
+    const userCount = await User.countDocuments();
+    const blockedCount = await User.countDocuments({ isBlocked: true });
+    const gameCount = Object.keys(gamesDatabase).length;
+    const componentCount = Object.values(componentPrices).reduce(
+      (s, v) => s + Object.keys(v).length, 0
+    );
+    const allUsers = await User.find({}, "checkHistory");
+    const gameCounts = {};
+    for (const user of allUsers) {
+      for (const h of user.checkHistory || []) {
+        if (h.game) gameCounts[h.game] = (gameCounts[h.game] || 0) + 1;
+      }
+    }
+    const popularGames = Object.entries(gameCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([game, count]) => ({ game, count }));
+    const totalChecks = Object.values(gameCounts).reduce((s, v) => s + v, 0);
+    res.json({
+      success: true,
+      stats: { userCount, blockedCount, gameCount, componentCount, popularGames, totalChecks },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Ошибка сервера" });
   }
 });
 

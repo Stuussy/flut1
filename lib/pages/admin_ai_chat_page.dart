@@ -5,8 +5,9 @@ import 'package:http/http.dart' as http;
 
 class AdminAiChatPage extends StatefulWidget {
   final String adminEmail;
+  final String adminToken;
 
-  const AdminAiChatPage({super.key, required this.adminEmail});
+  const AdminAiChatPage({super.key, required this.adminEmail, this.adminToken = ''});
 
   @override
   State<AdminAiChatPage> createState() => _AdminAiChatPageState();
@@ -97,7 +98,7 @@ class _AdminAiChatPageState extends State<AdminAiChatPage>
       final response = await http
           .post(
             url,
-            headers: const {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${widget.adminToken}'},
             body: jsonEncode(payload),
           )
           .timeout(const Duration(seconds: 30));
