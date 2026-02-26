@@ -688,32 +688,52 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
+    // Check regular user first
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.json({ success: false, message: "Неверный email или пароль" });
+    if (user) {
+      if (user.isBlocked) {
+        return res.json({ success: false, message: "Аккаунт заблокирован" });
+      }
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.json({ success: false, message: "Неверный email или пароль" });
+      }
+      const token = jwt.sign(
+        { email: user.email, userId: user._id.toString() },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+      return res.json({
+        success: true,
+        message: "Успешный вход",
+        token,
+        isAdmin: false,
+        user: { username: user.username, email: user.email, pcSpecs: user.pcSpecs },
+      });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.json({ success: false, message: "Неверный email или пароль" });
+    // Fallback: check admin
+    const admin = await Admin.findOne({ email });
+    if (admin) {
+      const isPasswordValid = await bcrypt.compare(password, admin.password);
+      if (!isPasswordValid) {
+        return res.json({ success: false, message: "Неверный email или пароль" });
+      }
+      const token = jwt.sign(
+        { email: admin.email, name: admin.name, isAdmin: true },
+        ADMIN_JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+      return res.json({
+        success: true,
+        message: "Успешный вход",
+        token,
+        isAdmin: true,
+        admin: { email: admin.email, name: admin.name },
+      });
     }
 
-    const token = jwt.sign(
-      { email: user.email, userId: user._id.toString() },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.json({
-      success: true,
-      message: "Успешный вход",
-      token,
-      user: {
-        username: user.username,
-        email: user.email,
-        pcSpecs: user.pcSpecs,
-      },
-    });
+    return res.json({ success: false, message: "Неверный email или пароль" });
   } catch (err) {
     console.error("Ошибка входа:", err);
     res.json({ success: false, message: "Ошибка сервера" });

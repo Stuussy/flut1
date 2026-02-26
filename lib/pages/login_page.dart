@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'register_page.dart';
 import 'main_page.dart';
-import 'admin_login_page.dart';
+import 'admin_panel_page.dart';
 import '../utils/session_manager.dart';
 import '../utils/api_config.dart';
 
@@ -84,16 +84,32 @@ class _LoginPageState extends State<LoginPage>
 
         if (data['success'] == true) {
           final token = data['token'] as String? ?? '';
-          await SessionManager.saveUserSession(email, token);
+          final isAdmin = data['isAdmin'] == true;
 
           _showSnackBar("Успешный вход!", const Color(0xFF4CAF50));
           await Future.delayed(const Duration(milliseconds: 500));
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => MainPage(userEmail: email),
-            ),
-          );
+
+          if (isAdmin) {
+            await SessionManager.saveAdminToken(token);
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AdminPanelPage(adminEmail: email, adminToken: token),
+                ),
+              );
+            }
+          } else {
+            await SessionManager.saveUserSession(email, token);
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MainPage(userEmail: email),
+                ),
+              );
+            }
+          }
         } else {
           _showSnackBar(
             data['message'] ?? "Неверные данные",
@@ -342,25 +358,17 @@ class _LoginPageState extends State<LoginPage>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GestureDetector(
-                    onLongPress: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const AdminLoginPage(),
-                      ),
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.games_rounded,
-                        color: Color(0xFF6C63FF),
-                        size: 40,
-                      ),
+                    child: const Icon(
+                      Icons.games_rounded,
+                      color: Color(0xFF6C63FF),
+                      size: 40,
                     ),
                   ),
                   
