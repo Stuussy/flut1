@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../utils/session_manager.dart';
 import '../utils/api_config.dart';
 import '../utils/app_colors.dart';
+import '../utils/cache_manager.dart';
 
 // ─── Единый список железа (единственное место для изменений) ────────────────
 
@@ -414,6 +415,9 @@ class _AddPcPageWithCallbackState extends State<AddPcPageWithCallback> {
       } else if (response.statusCode == 200) {
         _showSnackBar(
             'Характеристики ПК успешно обновлены!', const Color(0xFF4CAF50));
+        // Сбрасываем весь кэш совместимости — компоненты изменились,
+        // поэтому FPS для всех игр нужно пересчитать
+        await CacheManager.clearAll();
         SessionManager.pcChangeCount.value++;
 
         if (widget.showBackButton) {
