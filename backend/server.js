@@ -3,11 +3,56 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 const { GoogleGenAI } = require("@google/genai");
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const JWT_SECRET = process.env.JWT_SECRET || "gamepulse_jwt_secret_2024";
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || "gamepulse_admin_jwt_secret_2024_secure";
+
+// ── Email transporter ──────────────────────────────────────────────────────────
+const emailTransporter = nodemailer.createTransport({
+  service: process.env.SMTP_SERVICE || "gmail",
+  auth: {
+    user: process.env.SMTP_EMAIL,
+    pass: process.env.SMTP_PASSWORD,
+  },
+});
+
+// ── OTP in-memory store: email → { code, expiry, purpose } ────────────────────
+const otpStore = new Map();
+const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function generateOTP() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function sendOTPEmail(email, code, purpose) {
+  const isRegister = purpose === "register";
+  const subject = isRegister ? "GamePulse — Подтверждение регистрации" : "GamePulse — Сброс пароля";
+  const heading = isRegister ? "Подтверждение почты" : "Сброс пароля";
+  const desc = isRegister
+    ? "Для завершения регистрации введите код ниже:"
+    : "Для сброса пароля введите код ниже:";
+
+  await emailTransporter.sendMail({
+    from: `"GamePulse" <${process.env.SMTP_EMAIL}>`,
+    to: email,
+    subject,
+    html: `
+      <div style="background:#0D0D1E;padding:40px 20px;font-family:Arial,sans-serif;text-align:center;">
+        <h1 style="color:#6C63FF;margin-bottom:8px;">GamePulse</h1>
+        <h2 style="color:#fff;font-size:20px;margin-bottom:8px;">${heading}</h2>
+        <p style="color:#aaa;font-size:15px;margin-bottom:28px;">${desc}</p>
+        <div style="display:inline-block;background:#1A1A2E;border:2px solid #6C63FF;border-radius:16px;padding:20px 40px;">
+          <span style="color:#fff;font-size:36px;font-weight:700;letter-spacing:10px;">${code}</span>
+        </div>
+        <p style="color:#666;font-size:13px;margin-top:24px;">Код действителен 10 минут.<br>Если вы не запрашивали код — проигнорируйте письмо.</p>
+      </div>
+    `,
+  });
+}
+
 
 const app = express();
 app.use((req, res, next) => {
@@ -750,19 +795,74 @@ function checkCompatibility(userPC, requirements, gameTitle) {
 }
 
 
+// ── Send OTP (registration or password reset) ─────────────────────────────────
+app.post("/send-otp", async (req, res) => {
+  const { email, purpose } = req.body;
+
+  if (!email || !purpose) {
+    return res.status(400).json({ success: false, message: "Укажите email и цель" });
+  }
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ success: false, message: "Некорректный email" });
+  }
+
+  try {
+    if (purpose === "register") {
+      const existing = await User.findOne({ email });
+      if (existing) {
+        return res.status(400).json({ success: false, message: "Email уже зарегистрирован" });
+      }
+    } else if (purpose === "reset") {
+      const existing = await User.findOne({ email });
+      if (!existing) {
+        return res.status(400).json({ success: false, message: "Пользователь с таким email не найден" });
+      }
+    }
+
+    // Rate-limit: don't resend within 60 seconds
+    const existing = otpStore.get(email);
+    if (existing && Date.now() < existing.expiry - OTP_TTL_MS + 60_000) {
+      return res.status(429).json({ success: false, message: "Подождите 60 секунд перед повторной отправкой" });
+    }
+
+    const code = generateOTP();
+    otpStore.set(email, { code, expiry: Date.now() + OTP_TTL_MS, purpose });
+
+    await sendOTPEmail(email, code, purpose);
+
+    res.json({ success: true, message: "Код отправлен на почту" });
+  } catch (err) {
+    console.error("Ошибка отправки OTP:", err);
+    res.status(500).json({ success: false, message: "Не удалось отправить код. Проверьте настройки почты." });
+  }
+});
+
 app.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, code } = req.body;
 
   if (!password || password.length < 8) {
-    return res.status(400).json({
-      message: "Пароль должен содержать минимум 8 символов"
-    });
+    return res.status(400).json({ success: false, message: "Пароль должен содержать минимум 8 символов" });
+  }
+
+  // Verify OTP
+  const otp = otpStore.get(email);
+  if (!otp || otp.purpose !== "register") {
+    return res.status(400).json({ success: false, message: "Сначала запросите код подтверждения" });
+  }
+  if (Date.now() > otp.expiry) {
+    otpStore.delete(email);
+    return res.status(400).json({ success: false, message: "Код истёк. Запросите новый" });
+  }
+  if (otp.code !== String(code).trim()) {
+    return res.status(400).json({ success: false, message: "Неверный код подтверждения" });
   }
 
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Email уже зарегистрирован" });
+      return res.status(400).json({ success: false, message: "Email уже зарегистрирован" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -775,10 +875,11 @@ app.post("/register", async (req, res) => {
     });
 
     await newUser.save();
-    res.status(201).json({ message: "Регистрация успешна" });
+    otpStore.delete(email);
+    res.status(201).json({ success: true, message: "Регистрация успешна" });
   } catch (err) {
     console.error("Ошибка регистрации:", err);
-    res.status(500).json({ message: "Ошибка регистрации" });
+    res.status(500).json({ success: false, message: "Ошибка регистрации" });
   }
 });
 
@@ -1021,13 +1122,26 @@ Provide ONLY a JSON object (no markdown, no code blocks, no explanation outside 
 });
 
 app.post("/forgot-password", async (req, res) => {
-  const { email, newPassword } = req.body;
+  const { email, code, newPassword } = req.body;
 
   if (!newPassword || newPassword.length < 8) {
     return res.status(400).json({
       success: false,
       message: "Новый пароль должен содержать минимум 8 символов",
     });
+  }
+
+  // Verify OTP
+  const otp = otpStore.get(email);
+  if (!otp || otp.purpose !== "reset") {
+    return res.status(400).json({ success: false, message: "Сначала запросите код подтверждения" });
+  }
+  if (Date.now() > otp.expiry) {
+    otpStore.delete(email);
+    return res.status(400).json({ success: false, message: "Код истёк. Запросите новый" });
+  }
+  if (otp.code !== String(code).trim()) {
+    return res.status(400).json({ success: false, message: "Неверный код подтверждения" });
   }
 
   try {
@@ -1042,6 +1156,7 @@ app.post("/forgot-password", async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
+    otpStore.delete(email);
 
     res.json({
       success: true,
