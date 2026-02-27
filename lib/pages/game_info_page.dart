@@ -702,6 +702,12 @@ class _GameInfoPageState extends State<GameInfoPage>
                                 children: [
                                   _buildCompactResultCard(),
 
+                                  // ИИ-анализ производительности
+                                  if (compatibilityData!['aiAnalysis'] != null) ...[
+                                    const SizedBox(height: 16),
+                                    _buildAiAnalysisCard(),
+                                  ],
+
                                   // Баннер с конкретными рекомендациями
                                   // прямо на странице при статусе insufficient
                                   if (compatibilityData!['compatibility']['status'] == 'insufficient')
@@ -732,6 +738,173 @@ class _GameInfoPageState extends State<GameInfoPage>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAiAnalysisCard() {
+    final ai = compatibilityData!['aiAnalysis'] as Map<String, dynamic>;
+    final bottleneck = ai['bottleneck']?.toString() ?? '';
+    final quality = ai['quality']?.toString() ?? '';
+    final fpsRange = ai['fpsRange']?.toString() ?? '';
+    final analysis = ai['analysis']?.toString() ?? '';
+    final ac = AppColors.of(context);
+
+    IconData bottleneckIcon;
+    Color bottleneckColor;
+    switch (bottleneck) {
+      case 'GPU':
+        bottleneckIcon = Icons.videogame_asset_rounded;
+        bottleneckColor = const Color(0xFFE91E63);
+        break;
+      case 'CPU':
+        bottleneckIcon = Icons.memory_rounded;
+        bottleneckColor = const Color(0xFFFFA726);
+        break;
+      case 'RAM':
+        bottleneckIcon = Icons.storage_rounded;
+        bottleneckColor = const Color(0xFF00BCD4);
+        break;
+      default:
+        bottleneckIcon = Icons.check_circle_outline;
+        bottleneckColor = const Color(0xFF4CAF50);
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ac.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF6C63FF).withValues(alpha: 0.08),
+            ac.card,
+          ],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.auto_awesome,
+                    color: Color(0xFF6C63FF), size: 16),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'ИИ-анализ',
+                style: TextStyle(
+                  color: ac.text,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Stats row
+          Row(
+            children: [
+              Expanded(
+                child: _buildAiStatChip(
+                  Icons.speed_rounded,
+                  'FPS диапазон',
+                  fpsRange,
+                  const Color(0xFF4CAF50),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildAiStatChip(
+                  Icons.tune_rounded,
+                  'Качество',
+                  quality,
+                  const Color(0xFF6C63FF),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildAiStatChip(
+                  bottleneckIcon,
+                  'Узкое место',
+                  bottleneck,
+                  bottleneckColor,
+                ),
+              ),
+            ],
+          ),
+          if (analysis.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: ac.text.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: ac.inputBorder),
+              ),
+              child: Text(
+                analysis,
+                style: TextStyle(
+                  color: ac.textSecondary,
+                  fontSize: 12.5,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAiStatChip(IconData icon, String label, String value, Color color) {
+    final ac = AppColors.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 13),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: ac.textSecondary,
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value.isNotEmpty ? value : '—',
+            style: TextStyle(
+              color: color,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

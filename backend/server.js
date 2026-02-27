@@ -464,152 +464,245 @@ const gamesDatabase = {
 };
 const componentPrices = {
   cpu: {
-    "Intel i3-12100": { 
-      price: 120, 
-      link: "https://www.dns-shop.ru/search/?q=Intel+Core+i3-12100",
-      performance: 100,
-      budget: "low"
-    },
-    "Intel i5-12400": { 
-      price: 180, 
-      link: "https://www.dns-shop.ru/search/?q=Intel+Core+i5-12400",
-      performance: 150,
-      budget: "medium"
-    },
-    "Intel i7-13620h": { 
-      price: 300, 
-      link: "https://www.dns-shop.ru/search/?q=Intel+Core+i7-13620H",
-      performance: 220,
-      budget: "medium"
-    },
-    "Intel i9-14900k": { 
-      price: 600, 
-      link: "https://www.dns-shop.ru/search/?q=Intel+Core+i9-14900K",
-      performance: 320,
-      budget: "high"
-    },
-    "AMD Ryzen 3 3200g": { 
-      price: 90, 
-      link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+3+3200G",
-      performance: 90,
-      budget: "low"
-    },
-    "AMD Ryzen 5 5600x": { 
-      price: 200, 
-      link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+5+5600X",
-      performance: 180,
-      budget: "medium"
-    },
-    "AMD Ryzen 7 5700x3d": { 
-      price: 300, 
-      link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+7+5700X3D",
-      performance: 260,
-      budget: "medium"
-    },
-    "AMD Ryzen 9 9950x3d": { 
-      price: 700, 
-      link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+9+9950X3D",
-      performance: 350,
-      budget: "high"
-    },
+    // ── Intel Core i3 ──────────────────────────────────────────────────────
+    "Intel Core i3-10100": { price: 90, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i3-10100", performance: 95, budget: "low" },
+    "Intel Core i3-12100": { price: 110, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i3-12100", performance: 110, budget: "low" },
+    // ── Intel Core i5 ──────────────────────────────────────────────────────
+    "Intel Core i5-10400": { price: 130, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i5-10400", performance: 155, budget: "low" },
+    "Intel Core i5-12400": { price: 180, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i5-12400", performance: 180, budget: "medium" },
+    "Intel Core i5-13400": { price: 210, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i5-13400", performance: 190, budget: "medium" },
+    "Intel Core i5-13600K": { price: 280, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i5-13600K", performance: 215, budget: "medium" },
+    // ── Intel Core i7 ──────────────────────────────────────────────────────
+    "Intel Core i7-10700K": { price: 240, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i7-10700K", performance: 215, budget: "medium" },
+    "Intel Core i7-12700K": { price: 320, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i7-12700K", performance: 255, budget: "medium" },
+    "Intel Core i7-13700K": { price: 400, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i7-13700K", performance: 270, budget: "high" },
+    "Intel Core i7-13620H": { price: 300, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i7-13620H", performance: 230, budget: "medium" },
+    // ── Intel Core i9 ──────────────────────────────────────────────────────
+    "Intel Core i9-12900K": { price: 500, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i9-12900K", performance: 300, budget: "high" },
+    "Intel Core i9-13900K": { price: 580, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i9-13900K", performance: 325, budget: "high" },
+    "Intel Core i9-14900K": { price: 620, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i9-14900K", performance: 335, budget: "high" },
+    // ── AMD Ryzen 3 ────────────────────────────────────────────────────────
+    "AMD Ryzen 3 3200G": { price: 80, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+3+3200G", performance: 85, budget: "low" },
+    // ── AMD Ryzen 5 ────────────────────────────────────────────────────────
+    "AMD Ryzen 5 3600": { price: 120, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+5+3600", performance: 155, budget: "low" },
+    "AMD Ryzen 5 5600": { price: 160, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+5+5600", performance: 185, budget: "medium" },
+    "AMD Ryzen 5 5600X": { price: 175, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+5+5600X", performance: 190, budget: "medium" },
+    "AMD Ryzen 5 7600X": { price: 250, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+5+7600X", performance: 225, budget: "medium" },
+    // ── AMD Ryzen 7 ────────────────────────────────────────────────────────
+    "AMD Ryzen 7 3700X": { price: 180, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+7+3700X", performance: 200, budget: "medium" },
+    "AMD Ryzen 7 5700X": { price: 220, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+7+5700X", performance: 235, budget: "medium" },
+    "AMD Ryzen 7 5700X3D": { price: 270, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+7+5700X3D", performance: 270, budget: "medium" },
+    "AMD Ryzen 7 7700X": { price: 350, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+7+7700X", performance: 265, budget: "high" },
+    // ── AMD Ryzen 9 ────────────────────────────────────────────────────────
+    "AMD Ryzen 9 5900X": { price: 320, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+9+5900X", performance: 265, budget: "high" },
+    "AMD Ryzen 9 5950X": { price: 400, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+9+5950X", performance: 280, budget: "high" },
+    "AMD Ryzen 9 7900X": { price: 480, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+9+7900X", performance: 300, budget: "high" },
+    "AMD Ryzen 9 9950X3D": { price: 720, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+9+9950X3D", performance: 360, budget: "high" },
+    // ── Legacy aliases used in game requirements ────────────────────────────
+    "Intel i3-12100": { price: 110, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i3-12100", performance: 110, budget: "low" },
+    "Intel i5-12400": { price: 180, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i5-12400", performance: 180, budget: "medium" },
+    "Intel i7-13620h": { price: 300, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i7-13620H", performance: 230, budget: "medium" },
+    "Intel i9-14900k": { price: 620, link: "https://www.dns-shop.ru/search/?q=Intel+Core+i9-14900K", performance: 335, budget: "high" },
+    "AMD Ryzen 3 3200g": { price: 80, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+3+3200G", performance: 85, budget: "low" },
+    "AMD Ryzen 5 5600x": { price: 175, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+5+5600X", performance: 190, budget: "medium" },
+    "AMD Ryzen 7 5700x3d": { price: 270, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+7+5700X3D", performance: 270, budget: "medium" },
+    "AMD Ryzen 9 9950x3d": { price: 720, link: "https://www.dns-shop.ru/search/?q=AMD+Ryzen+9+9950X3D", performance: 360, budget: "high" },
   },
   gpu: {
-    "NVIDIA GTX 1650": { 
-      price: 180, 
-      link: "https://www.dns-shop.ru/search/?q=NVIDIA+GeForce+GTX+1650",
-      performance: 100,
-      budget: "low"
-    },
-    "NVIDIA RTX 2060": { 
-      price: 300, 
-      link: "https://www.dns-shop.ru/search/?q=NVIDIA+GeForce+RTX+2060",
-      performance: 150,
-      budget: "medium"
-    },
-    "NVIDIA RTX 3060": { 
-      price: 400, 
-      link: "https://www.dns-shop.ru/search/?q=NVIDIA+GeForce+RTX+3060",
-      performance: 200,
-      budget: "medium"
-    },
-    "NVIDIA RTX 4060": { 
-      price: 500, 
-      link: "https://www.dns-shop.ru/search/?q=NVIDIA+GeForce+RTX+4060",
-      performance: 250,
-      budget: "high"
-    },
-    "AMD RX 6600": { 
-      price: 280, 
-      link: "https://www.dns-shop.ru/search/?q=AMD+Radeon+RX+6600",
-      performance: 160,
-      budget: "medium"
-    },
-    "AMD RX 7800 XT": { 
-      price: 550, 
-      link: "https://www.dns-shop.ru/search/?q=AMD+Radeon+RX+7800+XT",
-      performance: 280,
-      budget: "high"
-    },
+    // ── NVIDIA GTX ─────────────────────────────────────────────────────────
+    "NVIDIA GTX 1060 6GB": { price: 90, link: "https://www.dns-shop.ru/search/?q=NVIDIA+GTX+1060+6GB", performance: 85, budget: "low" },
+    "NVIDIA GTX 1070": { price: 100, link: "https://www.dns-shop.ru/search/?q=NVIDIA+GTX+1070", performance: 110, budget: "low" },
+    "NVIDIA GTX 1080": { price: 130, link: "https://www.dns-shop.ru/search/?q=NVIDIA+GTX+1080", performance: 130, budget: "low" },
+    "NVIDIA GTX 1650": { price: 160, link: "https://www.dns-shop.ru/search/?q=NVIDIA+GTX+1650", performance: 100, budget: "low" },
+    "NVIDIA GTX 1650 Super": { price: 175, link: "https://www.dns-shop.ru/search/?q=NVIDIA+GTX+1650+Super", performance: 112, budget: "low" },
+    "NVIDIA GTX 1660": { price: 185, link: "https://www.dns-shop.ru/search/?q=NVIDIA+GTX+1660", performance: 128, budget: "low" },
+    "NVIDIA GTX 1660 Super": { price: 200, link: "https://www.dns-shop.ru/search/?q=NVIDIA+GTX+1660+Super", performance: 140, budget: "low" },
+    // ── NVIDIA RTX 20xx ────────────────────────────────────────────────────
+    "NVIDIA RTX 2060": { price: 250, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+2060", performance: 150, budget: "medium" },
+    "NVIDIA RTX 2060 Super": { price: 280, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+2060+Super", performance: 168, budget: "medium" },
+    "NVIDIA RTX 2070 Super": { price: 320, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+2070+Super", performance: 190, budget: "medium" },
+    "NVIDIA RTX 2080 Ti": { price: 420, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+2080+Ti", performance: 235, budget: "high" },
+    // ── NVIDIA RTX 30xx ────────────────────────────────────────────────────
+    "NVIDIA RTX 3060": { price: 350, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+3060", performance: 200, budget: "medium" },
+    "NVIDIA RTX 3060 Ti": { price: 390, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+3060+Ti", performance: 220, budget: "medium" },
+    "NVIDIA RTX 3070": { price: 440, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+3070", performance: 248, budget: "medium" },
+    "NVIDIA RTX 3070 Ti": { price: 480, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+3070+Ti", performance: 262, budget: "high" },
+    "NVIDIA RTX 3080": { price: 580, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+3080", performance: 295, budget: "high" },
+    "NVIDIA RTX 3090": { price: 750, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+3090", performance: 320, budget: "high" },
+    // ── NVIDIA RTX 40xx ────────────────────────────────────────────────────
+    "NVIDIA RTX 4060": { price: 420, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+4060", performance: 252, budget: "medium" },
+    "NVIDIA RTX 4060 Ti": { price: 490, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+4060+Ti", performance: 278, budget: "high" },
+    "NVIDIA RTX 4070": { price: 620, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+4070", performance: 315, budget: "high" },
+    "NVIDIA RTX 4070 Ti Super": { price: 780, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+4070+Ti+Super", performance: 375, budget: "high" },
+    "NVIDIA RTX 4080": { price: 1000, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+4080", performance: 415, budget: "high" },
+    "NVIDIA RTX 4090": { price: 1600, link: "https://www.dns-shop.ru/search/?q=NVIDIA+RTX+4090", performance: 510, budget: "high" },
+    // ── AMD RX ─────────────────────────────────────────────────────────────
+    "AMD RX 570": { price: 70, link: "https://www.dns-shop.ru/search/?q=AMD+RX+570", performance: 78, budget: "low" },
+    "AMD RX 580": { price: 85, link: "https://www.dns-shop.ru/search/?q=AMD+RX+580", performance: 93, budget: "low" },
+    "AMD RX 5600 XT": { price: 160, link: "https://www.dns-shop.ru/search/?q=AMD+RX+5600+XT", performance: 138, budget: "low" },
+    "AMD RX 5700 XT": { price: 210, link: "https://www.dns-shop.ru/search/?q=AMD+RX+5700+XT", performance: 182, budget: "medium" },
+    "AMD RX 6600": { price: 230, link: "https://www.dns-shop.ru/search/?q=AMD+RX+6600", performance: 160, budget: "medium" },
+    "AMD RX 6600 XT": { price: 260, link: "https://www.dns-shop.ru/search/?q=AMD+RX+6600+XT", performance: 172, budget: "medium" },
+    "AMD RX 6700 XT": { price: 330, link: "https://www.dns-shop.ru/search/?q=AMD+RX+6700+XT", performance: 212, budget: "medium" },
+    "AMD RX 6800 XT": { price: 460, link: "https://www.dns-shop.ru/search/?q=AMD+RX+6800+XT", performance: 268, budget: "high" },
+    "AMD RX 7600": { price: 280, link: "https://www.dns-shop.ru/search/?q=AMD+RX+7600", performance: 228, budget: "medium" },
+    "AMD RX 7800 XT": { price: 480, link: "https://www.dns-shop.ru/search/?q=AMD+RX+7800+XT", performance: 282, budget: "high" },
+    "AMD RX 7900 XTX": { price: 820, link: "https://www.dns-shop.ru/search/?q=AMD+RX+7900+XTX", performance: 395, budget: "high" },
+    // ── Intel Arc ──────────────────────────────────────────────────────────
+    "Intel Arc A770": { price: 250, link: "https://www.dns-shop.ru/search/?q=Intel+Arc+A770", performance: 202, budget: "medium" },
   },
   ram: {
-    "8 GB": { 
-      price: 30, 
-      link: "https://www.dns-shop.ru/catalog/17a8a01d16404e77/operativnaya-pamyat/?order=1&stock=2&f=8gb",
-      performance: 100,
-      budget: "low"
-    },
-    "16 GB": { 
-      price: 50, 
-      link: "https://www.dns-shop.ru/catalog/17a8a01d16404e77/operativnaya-pamyat/?order=1&stock=2&f=16gb",
-      performance: 150,
-      budget: "medium"
-    },
-    "32 GB": { 
-      price: 100, 
-      link: "https://www.dns-shop.ru/catalog/17a8a01d16404e77/operativnaya-pamyat/?order=1&stock=2&f=32gb",
-      performance: 200,
-      budget: "medium"
-    },
-    "64 GB": { 
-      price: 200, 
-      link: "https://www.dns-shop.ru/catalog/17a8a01d16404e77/operativnaya-pamyat/?order=1&stock=2&f=64gb",
-      performance: 250,
-      budget: "high"
-    },
+    "4 GB": { price: 15, link: "https://www.dns-shop.ru/catalog/17a8a01d16404e77/operativnaya-pamyat/?order=1&stock=2&f=4gb", performance: 60, budget: "low" },
+    "8 GB": { price: 30, link: "https://www.dns-shop.ru/catalog/17a8a01d16404e77/operativnaya-pamyat/?order=1&stock=2&f=8gb", performance: 100, budget: "low" },
+    "16 GB": { price: 55, link: "https://www.dns-shop.ru/catalog/17a8a01d16404e77/operativnaya-pamyat/?order=1&stock=2&f=16gb", performance: 150, budget: "medium" },
+    "32 GB": { price: 100, link: "https://www.dns-shop.ru/catalog/17a8a01d16404e77/operativnaya-pamyat/?order=1&stock=2&f=32gb", performance: 200, budget: "medium" },
+    "64 GB": { price: 200, link: "https://www.dns-shop.ru/catalog/17a8a01d16404e77/operativnaya-pamyat/?order=1&stock=2&f=64gb", performance: 250, budget: "high" },
   },
 };
 function getComponentPerformance(component, type) {
+  if (!component) return 100;
   const prices = componentPrices[type];
-  if (prices && prices[component]) {
-    return prices[component].performance || 100;
+
+  if (prices) {
+    // Exact match
+    if (prices[component]?.performance) return prices[component].performance;
+    // Case-insensitive match
+    const lower = component.toLowerCase();
+    for (const [key, data] of Object.entries(prices)) {
+      if (key.toLowerCase() === lower) return data.performance || 100;
+    }
   }
+
+  // Name-based estimation (handles any component the user may have typed)
+  return estimatePerformanceFromName(component, type);
+}
+
+function estimatePerformanceFromName(name, type) {
+  if (!name) return 100;
+  const n = name.toLowerCase();
+
+  if (type === 'cpu') {
+    // Generation/series boosts
+    const gen = (() => {
+      const m = n.match(/(\d{4,5})/);
+      if (!m) return 0;
+      const num = parseInt(m[1]);
+      if (num >= 14000) return 15;
+      if (num >= 13000) return 10;
+      if (num >= 12000) return 5;
+      return 0;
+    })();
+    if (n.includes('x3d') || n.includes('9950')) return 350 + gen;
+    if (n.includes('i9') || n.includes('ryzen 9')) return 315 + gen;
+    if (n.includes('i7') || n.includes('ryzen 7')) return 255 + gen;
+    if (n.includes('i5') || n.includes('ryzen 5')) return 175 + gen;
+    if (n.includes('i3') || n.includes('ryzen 3')) return 100 + gen;
+    return 100;
+  }
+
+  if (type === 'gpu') {
+    if (n.includes('4090')) return 510;
+    if (n.includes('4080')) return 415;
+    if (n.includes('4070 ti super') || n.includes('4070ti super') || n.includes('4070 ti s')) return 375;
+    if (n.includes('4070 ti') || n.includes('4070ti')) return 350;
+    if (n.includes('4070')) return 315;
+    if (n.includes('4060 ti') || n.includes('4060ti')) return 278;
+    if (n.includes('4060')) return 252;
+    if (n.includes('3090 ti') || n.includes('3090ti')) return 335;
+    if (n.includes('3090')) return 320;
+    if (n.includes('3080 ti') || n.includes('3080ti')) return 310;
+    if (n.includes('3080')) return 295;
+    if (n.includes('3070 ti') || n.includes('3070ti')) return 262;
+    if (n.includes('3070')) return 248;
+    if (n.includes('3060 ti') || n.includes('3060ti')) return 220;
+    if (n.includes('3060')) return 200;
+    if (n.includes('2080 ti') || n.includes('2080ti')) return 235;
+    if (n.includes('2080')) return 215;
+    if (n.includes('2070 super') || n.includes('2070s')) return 190;
+    if (n.includes('2070')) return 180;
+    if (n.includes('2060 super') || n.includes('2060s')) return 168;
+    if (n.includes('2060')) return 150;
+    if (n.includes('7900 xtx') || n.includes('7900xtx')) return 395;
+    if (n.includes('7900 xt') || n.includes('7900xt')) return 360;
+    if (n.includes('7800 xt') || n.includes('7800xt')) return 282;
+    if (n.includes('7700 xt') || n.includes('7700xt')) return 255;
+    if (n.includes('7600 xt') || n.includes('7600xt')) return 238;
+    if (n.includes('7600')) return 228;
+    if (n.includes('6950 xt') || n.includes('6950xt')) return 305;
+    if (n.includes('6900 xt') || n.includes('6900xt')) return 290;
+    if (n.includes('6800 xt') || n.includes('6800xt')) return 268;
+    if (n.includes('6800')) return 250;
+    if (n.includes('6750 xt') || n.includes('6750xt')) return 220;
+    if (n.includes('6700 xt') || n.includes('6700xt')) return 212;
+    if (n.includes('6650 xt') || n.includes('6650xt')) return 185;
+    if (n.includes('6600 xt') || n.includes('6600xt')) return 172;
+    if (n.includes('6600')) return 160;
+    if (n.includes('5700 xt') || n.includes('5700xt')) return 182;
+    if (n.includes('5700')) return 170;
+    if (n.includes('5600 xt') || n.includes('5600xt')) return 138;
+    if (n.includes('5500 xt') || n.includes('5500xt')) return 110;
+    if (n.includes('arc a770')) return 202;
+    if (n.includes('arc a750')) return 185;
+    if (n.includes('1660 super') || n.includes('1660s')) return 140;
+    if (n.includes('1660 ti') || n.includes('1660ti')) return 135;
+    if (n.includes('1660')) return 128;
+    if (n.includes('1650 super') || n.includes('1650s')) return 112;
+    if (n.includes('1650')) return 100;
+    if (n.includes('1080 ti') || n.includes('1080ti')) return 160;
+    if (n.includes('1080')) return 130;
+    if (n.includes('1070 ti') || n.includes('1070ti')) return 122;
+    if (n.includes('1070')) return 110;
+    if (n.includes('rx 580') || n.includes('rx580')) return 93;
+    if (n.includes('rx 570') || n.includes('rx570')) return 78;
+    if (n.includes('1060')) return 85;
+    return 100;
+  }
+
+  if (type === 'ram') {
+    const gb = parseInt(n.match(/(\d+)\s*gb/)?.[1] || '0');
+    if (gb >= 64) return 250;
+    if (gb >= 32) return 200;
+    if (gb >= 16) return 150;
+    if (gb >= 8) return 100;
+    if (gb >= 4) return 60;
+    return 80;
+  }
+
   return 100;
 }
 function calculateRealFPS(userPC, gameTitle) {
   const cpuPerf = getComponentPerformance(userPC.cpu, 'cpu');
   const gpuPerf = getComponentPerformance(userPC.gpu, 'gpu');
   const ramPerf = getComponentPerformance(userPC.ram, 'ram');
-    const baseScore = (gpuPerf * 0.5) + (cpuPerf * 0.3) + (ramPerf * 0.2);
-    const gameMultipliers = {
-    "Counter-Strike 2": 1.2,
-    "PUBG: Battlegrounds": 0.8,
-    "Minecraft": 1.5,
-    "Valorant": 1.3,
-    "Cyberpunk 2077": 0.6,
-    "Red Dead Redemption 2": 0.7,
-    "Fortnite": 1.1,
-    "GTA V": 1.0,
-    "The Witcher 3": 0.9,
-    "Apex Legends": 1.0,
-    "Dota 2": 1.4,
-    "League of Legends": 1.4,
-    "Overwatch 2": 1.2,
-    "Elden Ring": 0.8,
-    "Starfield": 0.7,
-  };
-  
-  const multiplier = gameMultipliers[gameTitle] || 1.0;
-  return Math.round(baseScore * multiplier);
+  const baseScore = (gpuPerf * 0.55) + (cpuPerf * 0.30) + (ramPerf * 0.15);
+
+  // Dynamic multiplier: recommended tier always → ~60 FPS
+  // Works for ALL games including custom-added ones
+  const gameReqs = gamesDatabase[gameTitle];
+  let multiplier = 0.4; // fallback for games without requirements
+
+  if (gameReqs?.recommended) {
+    const recCpus = Array.isArray(gameReqs.recommended.cpu)
+      ? gameReqs.recommended.cpu
+      : [gameReqs.recommended.cpu].filter(Boolean);
+    const recGpus = Array.isArray(gameReqs.recommended.gpu)
+      ? gameReqs.recommended.gpu
+      : [gameReqs.recommended.gpu].filter(Boolean);
+    const recRam = gameReqs.recommended.ram || '16 GB';
+
+    const avgRecCpu = recCpus.length > 0
+      ? recCpus.reduce((s, c) => s + getComponentPerformance(c, 'cpu'), 0) / recCpus.length
+      : 175;
+    const avgRecGpu = recGpus.length > 0
+      ? recGpus.reduce((s, c) => s + getComponentPerformance(c, 'gpu'), 0) / recGpus.length
+      : 150;
+    const recRamPerf = getComponentPerformance(recRam, 'ram');
+
+    const recScore = (avgRecGpu * 0.55) + (avgRecCpu * 0.30) + (recRamPerf * 0.15);
+    multiplier = recScore > 0 ? 60 / recScore : 0.4;
+  }
+
+  return Math.max(5, Math.round(baseScore * multiplier));
 }
 
 function checkCompatibility(userPC, requirements, gameTitle) {
@@ -846,6 +939,59 @@ app.post("/check-game-compatibility", authenticateToken, async (req, res) => {
 
     const compatibility = checkCompatibility(user.pcSpecs, gameRequirements, gameTitle);
 
+    // ── AI analysis via Gemini ──────────────────────────────────────────────
+    let aiAnalysis = null;
+    try {
+      const minCpu = Array.isArray(gameRequirements.minimum?.cpu)
+        ? gameRequirements.minimum.cpu.join(' / ')
+        : (gameRequirements.minimum?.cpu || 'N/A');
+      const minGpu = Array.isArray(gameRequirements.minimum?.gpu)
+        ? gameRequirements.minimum.gpu.join(' / ')
+        : (gameRequirements.minimum?.gpu || 'N/A');
+      const recCpu = Array.isArray(gameRequirements.recommended?.cpu)
+        ? gameRequirements.recommended.cpu.join(' / ')
+        : (gameRequirements.recommended?.cpu || 'N/A');
+      const recGpu = Array.isArray(gameRequirements.recommended?.gpu)
+        ? gameRequirements.recommended.gpu.join(' / ')
+        : (gameRequirements.recommended?.gpu || 'N/A');
+
+      const aiPrompt = `You are a PC gaming performance expert. Analyze this PC configuration against the game requirements and give precise insights.
+
+PC Configuration:
+- CPU: ${user.pcSpecs.cpu}
+- GPU: ${user.pcSpecs.gpu}
+- RAM: ${user.pcSpecs.ram}
+
+Game: "${gameTitle}"
+Minimum Requirements: CPU: ${minCpu}, GPU: ${minGpu}, RAM: ${gameRequirements.minimum?.ram || 'N/A'}
+Recommended Requirements: CPU: ${recCpu}, GPU: ${recGpu}, RAM: ${gameRequirements.recommended?.ram || 'N/A'}
+
+Our formula estimated: ${compatibility.estimatedFPS} FPS
+
+Provide ONLY a JSON object (no markdown, no code blocks, no explanation outside JSON):
+{
+  "fpsRange": "realistic FPS range like '55-75' or '90-120'",
+  "quality": "recommended graphics quality: 'Ультра', 'Высокие', 'Средние', 'Низкие' or 'Минимальные'",
+  "bottleneck": "main bottleneck: 'GPU', 'CPU', 'RAM' or 'Нет'",
+  "analysis": "2-3 sentence analysis in Russian language explaining performance, bottlenecks and what settings to use"
+}`;
+
+      const aiResp = await ai.models.generateContent({
+        model: AI_MODEL,
+        contents: [{ role: 'user', parts: [{ text: aiPrompt }] }],
+        config: { temperature: 0.3, maxOutputTokens: 400 },
+      });
+
+      const rawText = (aiResp.text || '').trim();
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        aiAnalysis = JSON.parse(jsonMatch[0]);
+      }
+    } catch (aiErr) {
+      console.warn('AI analysis failed:', aiErr.message);
+      // aiAnalysis stays null — client handles gracefully
+    }
+
     // Save to check history (keep last 20 entries)
     user.checkHistory.unshift({
       game: gameTitle,
@@ -865,7 +1011,8 @@ app.post("/check-game-compatibility", authenticateToken, async (req, res) => {
       gameRequirements: {
         minimum: gameRequirements.minimum,
         recommended: gameRequirements.recommended,
-      }
+      },
+      aiAnalysis,
     });
   } catch (err) {
     console.error("Ошибка проверки:", err);
